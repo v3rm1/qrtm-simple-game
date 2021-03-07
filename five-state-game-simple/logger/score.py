@@ -10,7 +10,7 @@ AVG_SCORE = 1
 
 # TODO: Change this when using on local. The current path is hardcoded for Peregrine.
 # LAPTOP PATH
-SCORES_DIR = os.path.join(os.getcwd(), "a_test_simple/logger/scores/")
+SCORES_DIR = os.path.join(os.getcwd(), "five-state-game-simple/logger/scores/")
 
 # PEREGRINE PATH
 # SCORES_DIR = "/data/s3893030/rtm_ql_PER/logger/scores/"

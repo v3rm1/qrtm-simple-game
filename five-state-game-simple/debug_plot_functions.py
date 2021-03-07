@@ -8,7 +8,7 @@ from time import strftime
 
 # TODO: Change this when using on local. The current path is hardcoded for Peregrine.
 # LAPTOP PATH
-DEBUG_PLOT_DIR = os.path.join(os.getcwd(), "a_test_simple/logger/debug/")
+DEBUG_PLOT_DIR = os.path.join(os.getcwd(), "logger/debug/")
 
 # PEREGRINE PATH
 # DEBUG_PLOT_DIR = "/data/s3893030/rtm_ql_PER/logger/debug/"
