@@ -1,0 +1,46 @@
+# YAML Config file for RTM-QL agent
+
+learning_params:
+  gamma: 1
+  learning_rate: 1
+  EDF:
+    epsilon_min: 0.01
+    epsilon_max: 1
+    epsilon_decay: 0.99
+  SEDF:
+    tail: 0.4
+    slope: 0.2
+    tail_gradient: 0.2
+  epsilon_decay_function: SEDF 
+
+memory_params:
+  memory_size: 10000
+  batch_size: 30
+
+game_params:
+  episodes: 30
+  reward: 1
+  max_score: 200
+  min_score: -1
+  action_space: 2
+
+qrtm_params:
+  # number_of_features = num_inputs [in this case, 4] * feature_length ALWAYS
+  number_of_features: 64
+  feature_length: 16
+  # number_of_clauses = 2 * T ALWAYS
+  number_of_clauses: 256
+  T: 100
+  s: 0.000001
+  incremental: True
+  weighted_clauses: False
+  ta_states: 64
+
+preproc_params:
+  # Binarizer has to be a string 
+  # G: Greater Than binarizer 
+  # B: Binned binarizer
+  # Q: Quartile binarizer
+  # U: Unsigned binarizer
+  # S: Simple binarizer ** DEFAULT feature length should be set to 2 and number of features to 8
+  binarizer: U
