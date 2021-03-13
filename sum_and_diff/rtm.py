@@ -79,7 +79,7 @@ class TsetlinMachine:
 		for j in range(self.number_of_clauses):
 			output_sum += self.clause_output[j]*self.clause_sign[j]
 		
-		if output_sum > (self.number_of_clauses * self.threshold/2):
+		if output_sum > self.threshold:
 			output_sum = self.threshold
 		
 		elif output_sum < 0:
@@ -255,7 +255,7 @@ class TsetlinMachine:
 	### Batch Mode Training of Regression Tsetlin Machine ###
 	#########################################################
 
-	def fit(self, X, y, number_of_examples, epochs=100):
+	def fit(self, X, y, number_of_examples, epochs=1):
 		j = 0
 		l = 0
 		epoch = 0
