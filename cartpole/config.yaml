@@ -15,10 +15,10 @@ learning_params:
 
 memory_params:
   memory_size: 10000
-  batch_size: 30
+  batch_size: 35
 
 game_params:
-  episodes: 30
+  episodes: 100
   reward: 1
   max_score: 200
   min_score: -1
@@ -31,7 +31,7 @@ qrtm_params:
   # number_of_clauses = 2 * T ALWAYS
   number_of_clauses: 256
   T: 100
-  s: 0.000001
+  s: 2
   incremental: True
   weighted_clauses: False
   ta_states: 64

@@ -9,7 +9,7 @@ import csv
 import gym
 from logger.score import ScoreLogger
 from discretizer import CustomDiscretizer
-from debug_plot_functions import DebugLogger
+from logger.debugger import DebugLogger
 from rtm import TsetlinMachine
 
 # Path to file containing all configurations for the variables used by the q-rtm system
@@ -114,7 +114,9 @@ class RTMQL:
             target_q = [self.agent_1.predict(next_state), self.agent_2.predict(next_state)]
 
             print("PRE FIT", file=open(STDOUT_LOG, "a"))
+            print("State: {}".format(state), file=open(STDOUT_LOG, "a"))
             print("Q_Values - State: {}".format(q_values), file=open(STDOUT_LOG, "a"))
+            print("Next State: {}".format(next_state), file=open(STDOUT_LOG, "a"))
             print("Expectation - Next State: {}".format(target_q), file=open(STDOUT_LOG, "a"))
 
             # Compute temporal difference error
@@ -131,14 +133,16 @@ class RTMQL:
             q_values[action] += q_update
 
 			# Update agents on new q-values for the state
-            self.agent_1.update(state, q_values[action])
-            self.agent_2.update(state, q_values[1-action])
+            self.agent_1.update(state, q_values[0])
+            self.agent_2.update(state, q_values[1])
 
             # td_err_post_fit = reward + self.gamma * np.amax([self.agent_1.predict(next_state), self.agent_2.predict(next_state)]) - q_values[action]
 
             # print("TD_ERROR Pre fit: {}\nTD_ERROR Post fit: {}".format(td_error, td_err_post_fit))
             print("POST FIT", file=open(STDOUT_LOG, "a"))
+            print("State: {}".format(state), file=open(STDOUT_LOG, "a"))
             print("Q_Values - State: {}".format([self.agent_1.predict(state), self.agent_2.predict(state)]), file=open(STDOUT_LOG, "a"))
+            print("Next State: {}".format(next_state), file=open(STDOUT_LOG, "a"))
             print("Expectation - Next State: {}".format([self.agent_1.predict(next_state), self.agent_2.predict(next_state)]), file=open(STDOUT_LOG, "a"))
 
 

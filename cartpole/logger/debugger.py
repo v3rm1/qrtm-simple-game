@@ -57,14 +57,14 @@ class DebugLogger:
         """
         x = np.arange(n_runs)
         plt.subplots()
-        plt.plot(x, td_error, label="TD Error (Avg)")
+        plt.plot(x, td_error, label="RMS TD Err")
         plt.suptitle(self.env_name + ": RMS TD Error over " + str(n_runs) + " runs")
         plt.title("n_clauses: " + str(n_clauses) + " T: " + str(T) + " bits_per_feature: " + str(feature_length))
         plt.xlabel(x_label)
         plt.ylabel(y_label)
 
         if show_legend:
-            plt.legend(loc="upper left")
+            plt.legend(loc="upper right")
 
         plt.savefig(output_img, bbox_inches="tight")
         plt.close()
