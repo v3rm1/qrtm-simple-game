@@ -101,8 +101,8 @@ class TsetlinMachine:
 		###########################
 		### Sum up Clause Votes ###
 		###########################
-
-        # Map the total clause outputs into a continuous value using max and min values of the target series
+		print("INPUT: {}".format(X), file=open(self.logger, "a"))
+		# Map the total clause outputs into a continuous value using max and min values of the target series
 		output_sum = self.sum_up_clause_votes()
 		output_value = ((output_sum * (self.max_target-self.min_target))/ self.threshold) + self.min_target
 		print("Pred y: {}".format(output_value), file=open(self.logger, "a"))
@@ -150,10 +150,10 @@ class TsetlinMachine:
 		###########################
 		### Sum up Clause Votes ###
 		###########################
-
+		print("INPUT: X: {}\ty: {}".format(X, y), file=open(self.logger, "a"))
 		output_sum = self.sum_up_clause_votes()
 
-        ##############################
+		##############################
 		### Calculate Output Value ###
 		##############################
 
@@ -167,13 +167,13 @@ class TsetlinMachine:
 		for j in range(self.number_of_clauses):
 			self.feedback_to_clauses[j] = 0
 
-        # Type I feedback if target is higher than the predicted value
+		# Type I feedback if target is higher than the predicted value
 		if y > output_value:
 			for j in range(self.number_of_clauses):
 				if 1.0*random.randint(0, RAND_MAX)/RAND_MAX < 1.0*(abs(y-output_value))/(self.max_target - self.min_target):
 					self.feedback_to_clauses[j] += 1
 					
-        # Type II feedback if target is lower than the predicted value
+		# Type II feedback if target is lower than the predicted value
 		elif y < output_value:
 			for j in range(self.number_of_clauses):
 				if 1.0*random.randint(0, RAND_MAX)/RAND_MAX < 1.0*(abs(y-output_value))/(self.max_target - self.min_target):
@@ -219,7 +219,7 @@ class TsetlinMachine:
 									self.ta_state[j,k,0] -= 1
 					
 			elif self.feedback_to_clauses[j] < 0:
-                
+				
 				#########################
 				### Type II Feedback  ###
 				#########################
@@ -257,7 +257,7 @@ class TsetlinMachine:
 			for l in range(number_of_examples):
 				example_id = int(random_index[l])
 				target_class = y[example_id]
-            
+			
 				for j in range(self.number_of_features):
 					Xi[j] = X[example_id,j]
 				self.update(Xi, target_class)

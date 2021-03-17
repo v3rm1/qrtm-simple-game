@@ -13,7 +13,7 @@ AVG_SCORE = 195
 SCORES_DIR = os.path.join(os.getcwd(), "cartpole/logger/scores/")
 
 # PEREGRINE PATH
-# SCORES_DIR = "/data/s3893030/rtm_ql/logger/scores/"
+# SCORES_DIR = "/data/s3893030/cartpole/logger/scores/"
 
 SCORE_CSV = os.path.join(SCORES_DIR,
                          'score_' + strftime("%Y%m%d_%H%M%S") + ".csv")

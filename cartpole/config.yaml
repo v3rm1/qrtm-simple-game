@@ -15,10 +15,10 @@ learning_params:
 
 memory_params:
   memory_size: 10000
-  batch_size: 35
+  batch_size: 25
 
 game_params:
-  episodes: 100
+  episodes: 150
   reward: 1
   max_score: 200
   min_score: -1
@@ -26,15 +26,16 @@ game_params:
 
 qrtm_params:
   # number_of_features = num_inputs [in this case, 4] * feature_length ALWAYS
-  number_of_features: 64
-  feature_length: 16
+  number_of_features: 16
+  feature_length: 4
   # number_of_clauses = 2 * T ALWAYS
   number_of_clauses: 256
-  T: 100
-  s: 2
+  T: 128
+  s: 0.00001
   incremental: True
   weighted_clauses: False
-  ta_states: 64
+  # Set as multiple of number_of_features
+  ta_states: 128
 
 preproc_params:
   # Binarizer has to be a string 
@@ -43,4 +44,4 @@ preproc_params:
   # Q: Quartile binarizer
   # U: Unsigned binarizer
   # S: Simple binarizer ** DEFAULT feature length should be set to 2 and number of features to 8
-  binarizer: U
+  binarizer: G

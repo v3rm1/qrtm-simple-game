@@ -11,7 +11,7 @@ from time import strftime
 DEBUG_PLOT_DIR = os.path.join(os.getcwd(), "cartpole/logger/debug/")
 
 # PEREGRINE PATH
-# DEBUG_PLOT_DIR = "/data/s3893030/rtm_ql/logger/debug/"
+# DEBUG_PLOT_DIR = "/data/s3893030/cartpole/logger/debug/"
 
 TD_ERROR_PLOT = os.path.join(DEBUG_PLOT_DIR,
                          'RMS_TD_Err' + strftime("%Y%m%d_%H%M%S") + ".png")
