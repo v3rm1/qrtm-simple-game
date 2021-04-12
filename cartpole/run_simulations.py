@@ -14,11 +14,12 @@ from rtm import TsetlinMachine
 
 import neptune
 
+
 neptune.init(project_qualified_name='v3rm1/QRTM-Cartpole')
 
 # NOTE: SETTING GLOBAL SEED VALUES FOR CONSISTENT RESULTS IN EXPERIMENTAL SESSIONS
 # Set a seed value
-seed_value = 6294
+seed_value = 4027
 # 1. Set `PYTHONHASHSEED` environment variable at a fixed value
 os.environ['PYTHONHASHSEED']=str(seed_value)
 # 2. Set `python` built-in pseudo-random generator at a fixed value
@@ -26,6 +27,8 @@ random.seed(seed_value)
 # 3. Set `numpy` pseudo-random generator at a fixed value
 np.random.seed(seed_value)
 
+# A variable for attaching test tag to the experiment
+TEST_VAR = False
 
 # Path to file containing all configurations for the variables used by the q-rtm system
 CONFIG_PATH = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'config.yaml')
@@ -116,8 +119,9 @@ class RTMQL:
 		return np.argmax(q_values)
 	
 	def experience_replay(self, episode):
+		td_err_list = []
 		if len(self.memory) < self.replay_batch:
-			return [0,0]
+			return 0
 		# Generate random batch from memory
 		batch = random.sample(self.memory, self.replay_batch)
 
@@ -151,16 +155,18 @@ class RTMQL:
 			self.agent_1.update(state, q_values[0])
 			self.agent_2.update(state, q_values[1])
 
-			# td_err_post_fit = reward + self.gamma * np.amax([self.agent_1.predict(next_state), self.agent_2.predict(next_state)]) - q_values[action]
+			td_err_post_fit = reward + self.gamma * np.amax([self.agent_1.predict(next_state), self.agent_2.predict(next_state)]) - q_values[action]
 
-			# print("TD_ERROR Pre fit: {}\nTD_ERROR Post fit: {}".format(td_error, td_err_post_fit))
+			print("TD_ERROR Pre fit: {}\nTD_ERROR Post fit: {}".format(td_error, td_err_post_fit), file=open(STDOUT_LOG, "a"))
 			print("POST FIT", file=open(STDOUT_LOG, "a"))
 			print("State: {}".format(state), file=open(STDOUT_LOG, "a"))
 			print("Q_Values - State: {}".format([self.agent_1.predict(state), self.agent_2.predict(state)]), file=open(STDOUT_LOG, "a"))
 			print("Next State: {}".format(next_state), file=open(STDOUT_LOG, "a"))
 			print("Expectation - Next State: {}".format([self.agent_1.predict(next_state), self.agent_2.predict(next_state)]), file=open(STDOUT_LOG, "a"))
 
-
+			td_err_list.append(pow(td_error, 2))
+		
+		rms_td_err = np.sqrt(np.mean(td_err_list))
 
 		# Epsilon decay
 		if self.eps_decay == "SEDF":
@@ -168,7 +174,9 @@ class RTMQL:
 		else:
 			# Exponential epsilon decay
 			self.epsilon = self.exp_eps_decay(episode)
-		return td_error**2
+		if episode > 150:
+			self.epsilon = self.epsilon_min
+		return rms_td_err
 		
 def load_config(config_file):
 	with open(config_file, 'r') as stream:
@@ -234,7 +242,11 @@ def store_config_tested(config_data, win_count, run_date, tested_configs_file_pa
 	return
 
 def main():
-	neptune.create_experiment()
+	neptune.create_experiment(name="RTM-Cartpole", tags=["local", "4-bit features"])
+
+	if TEST_VAR:
+		neptune.append_tag("test")
+
 	config = load_config(CONFIG_PATH)
 	gamma = config['learning_params']['gamma']
 	episodes = config['game_params']['episodes']
@@ -243,6 +255,15 @@ def main():
 	feature_length = config['qrtm_params']['feature_length']
 	print("Configuration file loaded. Creating environment.", file=open(STDOUT_LOG, "a"))
 	env = gym.make("CartPole-v0")
+
+	neptune.log_text('T', str(config['qrtm_params']['T']))
+	neptune.log_text('s', str(config['qrtm_params']['s']))
+	neptune.log_text('Feature length (bits/feature)', str(config['qrtm_params']['feature_length']))
+	neptune.log_text('Number of Clauses', str(config['qrtm_params']['number_of_clauses']))
+	neptune.log_text('Number of TA States', str(config['qrtm_params']['ta_states']))
+	neptune.log_text('Binarizer', str(config['preproc_params']['binarizer']))
+	neptune.log_text('Exp Replay Batch', str(config['memory_params']['batch_size']))
+	neptune.log_text('Epsilon Decay Function', str(config['learning_params']['epsilon_decay_function']))
 	
 	# Initializing loggers and watchers
 	debug_log = DebugLogger("CartPole-v0")
@@ -261,7 +282,7 @@ def main():
 
 	for curr_ep in range(episodes):
 		
-		td_err_ep = []
+		rms_td_err_ep = 0
 		# Initialize episode variables
 		step = 0
 		done = False
@@ -279,7 +300,7 @@ def main():
 			
 			# Run simulation step in environment, retrieve next state, reward and game status
 			next_state, reward, done, info = env.step(action)
-			
+			reward = reward if not done else -reward
 			# Discretize and reshape next_state
 			next_state = discretizer.cartpole_binarizer(input_state=next_state, n_bins=binarized_length-1, bin_type=binarizer)
 			next_state = np.reshape(next_state, [1, feature_length * env.observation_space.shape[0]])[0]
@@ -310,11 +331,14 @@ def main():
 				break
 		
 		# Store TD error from experience replay
-		td_err_ep.append(rtm_agent.experience_replay(curr_ep))
+		rms_td_err_ep = rtm_agent.experience_replay(curr_ep)
+		print("episode td err RMS: {}".format(rms_td_err_ep))
 		# Append average TD error per episode to list
-		td_error.append(np.sqrt(np.mean(td_err_ep)))
-		neptune.log_metric('TD_ERR (RMS)', np.sqrt(np.mean(td_err_ep)))
+		td_error.append(rms_td_err_ep)
+		neptune.log_metric('TD_ERR (RMS)', rms_td_err_ep)
+		
 	print("Len of TDERR array: {}".format(len(td_error)))
+
 	# Plot average TD error over episode
 	debug_log.add_watcher(td_error,
 						  n_clauses=config["qrtm_params"]["number_of_clauses"],
@@ -328,8 +352,9 @@ def main():
 	# Store configuration tested, win count and timestamp of experiment
 	store_config_tested(config, win_ctr, run_dt)
 
+	neptune.log_artifact(STDOUT_LOG)
+	
+
 
 if __name__ == "__main__":
 	main()
-				
-

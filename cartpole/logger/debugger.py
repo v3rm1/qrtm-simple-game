@@ -6,6 +6,8 @@ import os
 import csv
 from time import strftime
 
+plt.style.use('seaborn-muted')
+
 # TODO: Change this when using on local. The current path is hardcoded for Peregrine.
 # LAPTOP PATH
 DEBUG_PLOT_DIR = os.path.join(os.getcwd(), "cartpole/logger/debug/")
@@ -68,4 +70,3 @@ class DebugLogger:
 
         plt.savefig(output_img, bbox_inches="tight")
         plt.close()
-
