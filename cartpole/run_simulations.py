@@ -174,8 +174,6 @@ class RTMQL:
 		else:
 			# Exponential epsilon decay
 			self.epsilon = self.exp_eps_decay(episode)
-		if episode > 150:
-			self.epsilon = self.epsilon_min
 		return rms_td_err
 		
 def load_config(config_file):

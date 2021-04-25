@@ -31,7 +31,7 @@ qrtm_params:
   # number_of_clauses = 2 * T ALWAYS
   number_of_clauses: 256
   T: 128
-  s: 7.5
+  s: 5000
   incremental: True
   weighted_clauses: False
   # Set as multiple of number_of_features
@@ -44,4 +44,4 @@ preproc_params:
   # Q: Quartile binarizer
   # U: Unsigned binarizer
   # S: Simple binarizer ** DEFAULT feature length should be set to 2 and number of features to 8
-  binarizer: U
+  binarizer: G

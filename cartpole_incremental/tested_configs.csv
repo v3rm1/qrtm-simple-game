@@ -1,0 +1,8 @@
+decay_fn,epsilon_min,epsilon_max,epsilon_decay,alpha,beta,delta,reward_discount,mem_size,batch_size,episodes,reward,max_score,min_score,action_space,qrtm_n_clauses,ta_states,T,s,wins,win_ratio,run_date,bin_length,incremental,weighted_clauses,binarizer
+SEDF,0,0,0,0.4,0.3,0.3,1,300,100,300,1,200,-1,2,256,128,128,7.5,0,0.0,20210419_125321,4,True,False,U
+SEDF,0,0,0,0.4,0.3,0.3,1,300,100,300,1,200,-1,2,256,128,128,7.5,0,0.0,20210419_185123,4,True,False,G
+SEDF,0,0,0,0.4,0.3,0.3,1,300,100,300,1,200,-1,2,256,128,128,1000,0,0.0,20210420_114402,4,True,False,G
+SEDF,0,0,0,0.4,0.3,0.3,1,300,100,300,1,200,-1,2,256,128,128,0.001,0,0.0,20210420_141259,4,True,False,G
+SEDF,0,0,0,0.4,0.3,0.3,1,300,100,300,1,200,-1,2,256,128,128,5000,0,0.0,20210421_103733,4,True,False,G
+SEDF,0,0,0,0.4,0.3,0.3,1,300,100,600,1,200,-1,2,256,128,128,1000,0,0.0,20210422_103706,4,True,False,G
+EDF,0.01,1,0.99,0,0,0,1,300,100,600,1,200,-1,2,256,128,128,1000,0,0.0,20210422_180859,4,True,False,G

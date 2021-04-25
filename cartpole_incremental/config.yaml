@@ -2,6 +2,7 @@
 
 learning_params:
   gamma: 1
+  lambda: 1
   learning_rate: 1
   EDF:
     epsilon_min: 0.01
@@ -11,14 +12,14 @@ learning_params:
     tail: 0.4
     slope: 0.3
     tail_gradient: 0.3
-  epsilon_decay_function: SEDF 
+  epsilon_decay_function: EDF 
 
 memory_params:
-  memory_size: 10000
+  memory_size: 300
   batch_size: 100
 
 game_params:
-  episodes: 300
+  episodes: 600
   reward: 1
   max_score: 200
   min_score: -1
@@ -31,7 +32,7 @@ qrtm_params:
   # number_of_clauses = 2 * T ALWAYS
   number_of_clauses: 256
   T: 128
-  s: 7.5
+  s: 1000
   incremental: True
   weighted_clauses: False
   # Set as multiple of number_of_features
@@ -44,4 +45,4 @@ preproc_params:
   # Q: Quartile binarizer
   # U: Unsigned binarizer
   # S: Simple binarizer ** DEFAULT feature length should be set to 2 and number of features to 8
-  binarizer: U
+  binarizer: G
