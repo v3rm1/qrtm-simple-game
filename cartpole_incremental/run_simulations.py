@@ -134,7 +134,7 @@ class RTMQL:
 			action = self.memory[idx][1]
 			state = self.memory[idx][0]
 
-			trace = trace * self.lambda_val * self.gamma
+			trace = [trace[i] * self.lambda_val * self.gamma for i in range(len(trace))]
 			q_vals = [q_vals[i] + self.learning_rate * trace[i] * e_t for i in range(len(q_vals))]
 			q_vals[action] = q_vals[action] + self.learning_rate * e_t_prime
 			trace[action] = trace[action] + 1
@@ -241,7 +241,8 @@ def main():
 	neptune.log_text('Binarizer', str(config['preproc_params']['binarizer']))
 	neptune.log_text('Exp Replay Batch', str(config['memory_params']['batch_size']))
 	neptune.log_text('Epsilon Decay Function', str(config['learning_params']['epsilon_decay_function']))
-	
+	neptune.log_artifact('Lambda', str(config['learning_params']['lambda']))
+	neptune.log_artifact('Gamma', str(config['learning_params']['gamma']))
 	# Initializing loggers and watchers
 	debug_log = DebugLogger("CartPole-v0")
 	score_log = ScoreLogger("CartPole-v0", episodes)

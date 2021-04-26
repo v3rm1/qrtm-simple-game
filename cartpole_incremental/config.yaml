@@ -2,7 +2,7 @@
 
 learning_params:
   gamma: 1
-  lambda: 1
+  lambda: 0.5
   learning_rate: 1
   EDF:
     epsilon_min: 0.01
