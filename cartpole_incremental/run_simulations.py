@@ -241,8 +241,8 @@ def main():
 	neptune.log_text('Binarizer', str(config['preproc_params']['binarizer']))
 	neptune.log_text('Exp Replay Batch', str(config['memory_params']['batch_size']))
 	neptune.log_text('Epsilon Decay Function', str(config['learning_params']['epsilon_decay_function']))
-	neptune.log_artifact('Lambda', str(config['learning_params']['lambda']))
-	neptune.log_artifact('Gamma', str(config['learning_params']['gamma']))
+	neptune.log_text('Lambda', str(config['learning_params']['lambda']))
+	neptune.log_text('Gamma', str(config['learning_params']['gamma']))
 	# Initializing loggers and watchers
 	debug_log = DebugLogger("CartPole-v0")
 	score_log = ScoreLogger("CartPole-v0", episodes)

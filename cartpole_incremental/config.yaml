@@ -2,7 +2,7 @@
 
 learning_params:
   gamma: 1
-  lambda: 0.5
+  lambda: 0.1
   learning_rate: 1
   EDF:
     epsilon_min: 0.01
@@ -19,7 +19,7 @@ memory_params:
   batch_size: 100
 
 game_params:
-  episodes: 600
+  episodes: 300
   reward: 1
   max_score: 200
   min_score: -1
