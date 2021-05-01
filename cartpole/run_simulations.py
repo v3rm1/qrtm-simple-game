@@ -253,6 +253,8 @@ def main():
 	feature_length = config['qrtm_params']['feature_length']
 	print("Configuration file loaded. Creating environment.", file=open(STDOUT_LOG, "a"))
 	env = gym.make("CartPole-v0")
+	if gamma<1:
+		neptune.append_tag("gamma="+str(gamma))
 
 	neptune.log_text('T', str(config['qrtm_params']['T']))
 	neptune.log_text('s', str(config['qrtm_params']['s']))
@@ -262,6 +264,7 @@ def main():
 	neptune.log_text('Binarizer', str(config['preproc_params']['binarizer']))
 	neptune.log_text('Exp Replay Batch', str(config['memory_params']['batch_size']))
 	neptune.log_text('Epsilon Decay Function', str(config['learning_params']['epsilon_decay_function']))
+	neptune.log_text('Gamma', str(config['learning_params']['gamma']))
 	
 	# Initializing loggers and watchers
 	debug_log = DebugLogger("CartPole-v0")
@@ -327,9 +330,11 @@ def main():
 				edf_epsilon_decay=config['learning_params']['EDF']['epsilon_decay'])
 				neptune.log_metric('score', step)
 				break
-		
-		# Store TD error from experience replay
-		rms_td_err_ep = rtm_agent.experience_replay(curr_ep)
+		if step < 195:	
+			# Store TD error from experience replay
+			rms_td_err_ep = rtm_agent.experience_replay(curr_ep)
+		else:
+			rms_td_err_ep = 0
 		print("episode td err RMS: {}".format(rms_td_err_ep))
 		# Append average TD error per episode to list
 		td_error.append(rms_td_err_ep)
