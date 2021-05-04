@@ -32,11 +32,11 @@ qrtm_params:
   # number_of_clauses = 2 * T ALWAYS
   number_of_clauses: 256
   T: 128
-  s: 7.5
+  s: 500
   incremental: True
   weighted_clauses: False
   # Set as multiple of number_of_features
-  ta_states: 16
+  ta_states: 8
 
 preproc_params:
   # Binarizer has to be a string 
