@@ -113,8 +113,10 @@ class RTMQL:
 
 	def act(self, state):
 		if np.random.rand() <= self.epsilon:
+			print("RANDOM ACTION", file=open(STDOUT_LOG, "a"))
 			a = random.randrange(self.action_space)
 			return a
+		print("LEARNER ACTION", file=open(STDOUT_LOG, "a"))
 		q_values = [self.agent_1.predict(state), self.agent_2.predict(state)]
 		return np.argmax(q_values)
 	
@@ -152,7 +154,11 @@ class RTMQL:
 			q_values[action] += q_update
 
 			# Update agents on new q-values for the state
+			print("AGENT 1", file=open(STDOUT_LOG, "a"))
+
 			self.agent_1.update(state, q_values[0])
+			print("AGENT 2", file=open(STDOUT_LOG, "a"))
+
 			self.agent_2.update(state, q_values[1])
 
 			td_err_post_fit = reward + self.gamma * np.amax([self.agent_1.predict(next_state), self.agent_2.predict(next_state)]) - q_values[action]
@@ -256,6 +262,7 @@ def main():
 	if gamma<1:
 		neptune.append_tag("gamma="+str(gamma))
 
+
 	neptune.log_text('T', str(config['qrtm_params']['T']))
 	neptune.log_text('s', str(config['qrtm_params']['s']))
 	neptune.log_text('Feature length (bits/feature)', str(config['qrtm_params']['feature_length']))
@@ -293,19 +300,20 @@ def main():
 		# Discretize and reshape state
 		state = discretizer.cartpole_binarizer(input_state=state, n_bins=binarized_length-1, bin_type=binarizer)
 		state = np.reshape(state, [1, feature_length * env.observation_space.shape[0]])[0]
+		
 
 		while not done:
 			step += 1
 			# Request agent action
 			action = rtm_agent.act(state)
-			
+			print("State: {0}".format(state), file=open(STDOUT_LOG, "a"))
 			# Run simulation step in environment, retrieve next state, reward and game status
 			next_state, reward, done, info = env.step(action)
 			reward = reward if not done else -reward
 			# Discretize and reshape next_state
 			next_state = discretizer.cartpole_binarizer(input_state=next_state, n_bins=binarized_length-1, bin_type=binarizer)
 			next_state = np.reshape(next_state, [1, feature_length * env.observation_space.shape[0]])[0]
-
+			print("Next State: {0}".format(next_state), file=open(STDOUT_LOG, "a"))
 			# Memorization
 			rtm_agent.memorize(state, action, reward, next_state, done)
 
@@ -330,11 +338,11 @@ def main():
 				edf_epsilon_decay=config['learning_params']['EDF']['epsilon_decay'])
 				neptune.log_metric('score', step)
 				break
-		if step < 195:	
-			# Store TD error from experience replay
-			rms_td_err_ep = rtm_agent.experience_replay(curr_ep)
-		else:
-			rms_td_err_ep = 0
+		# if step < 195:	
+		# 	# Store TD error from experience replay
+		rms_td_err_ep = rtm_agent.experience_replay(curr_ep)
+		# else:
+		# 	rms_td_err_ep = 0
 		print("episode td err RMS: {}".format(rms_td_err_ep))
 		# Append average TD error per episode to list
 		td_error.append(rms_td_err_ep)
