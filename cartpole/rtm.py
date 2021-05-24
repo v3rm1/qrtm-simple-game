@@ -106,6 +106,7 @@ class TsetlinMachine:
 		# Map the total clause outputs into a continuous value using max and min values of the target series
 		output_sum = self.sum_up_clause_votes()
 		output_value = ((output_sum * (self.max_target-self.min_target))/ self.threshold) + self.min_target
+		# output_value = (output_sum * self.max_target)/self.threshold
 		print("Pred y: {}".format(output_value), file=open(self.logger, "a"))
 		return output_value
 
@@ -159,7 +160,7 @@ class TsetlinMachine:
 		##############################
 
 		output_value = ((output_sum * (self.max_target-self.min_target))/ self.threshold) + self.min_target
-
+		# output_value = (output_sum * self.max_target)/self.threshold
 		###########################################
 		### Deciding the feedbck to each clause ###
 		###########################################
@@ -179,7 +180,7 @@ class TsetlinMachine:
 			for j in range(self.number_of_clauses):
 				if 1.0*random.randint(0, RAND_MAX)/RAND_MAX < 1.0*(abs(y-output_value))/(self.max_target - self.min_target):
 					self.feedback_to_clauses[j] -= 1
-		print("TA STATE BEFORE FEEDBACK:\n{}".format(self.ta_state), file=open(self.logger, "a"))
+		# print("TA STATE BEFORE FEEDBACK:\n{}".format(self.ta_state), file=open(self.logger, "a"))
 		print("Feedback type array: {}".format(self.feedback_to_clauses), file=open(self.logger, "a"))
 
 		for j in range(self.number_of_clauses):

@@ -364,6 +364,7 @@ def main():
 	store_config_tested(config, win_ctr, run_dt)
 
 	neptune.log_artifact(STDOUT_LOG)
+	neptune.log_artifact(CONFIG_PATH)
 	
 
 
