@@ -36,7 +36,7 @@ CONFIG_PATH = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'config.
 CONFIG_TEST_SAVE_PATH = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'tested_configs.csv')
 
 # NOTE: DEFINING A STDOUT LOGGER TO STORE ALL PRINT STATEMENTS FOR FUTURE USE
-STDOUT_LOG = os.path.join(os.path.dirname(os.path.realpath(__file__)), "run_"+strftime("%Y%m%d_%H%M%S")+".txt")
+STDOUT_LOG = os.path.join(os.path.dirname(os.path.realpath(__file__)), "logger/txt_logs/run_"+strftime("%Y%m%d_%H%M%S")+".txt")
 
 class RTMQL:
 	def __init__(self, environment, config, epsilon_decay_config="EDF"):

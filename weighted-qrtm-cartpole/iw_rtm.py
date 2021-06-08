@@ -78,13 +78,10 @@ class WeightedTsetlinMachine:
 
 		output_sum = 0
 		for j in range(self.number_of_clauses):
-			output_sum += self.weights[j] * self.clause_output[j]*self.clause_sign[j]
+			output_sum += self.weights[j] * self.clause_output[j] * self.clause_sign[j]
 		
-		if output_sum > self.threshold:
+		if output_sum < 0:
 			output_sum = self.threshold
-		
-		elif output_sum < 0:
-			output_sum = 0
 		print("Sum of clause votes: {}".format(output_sum), file=open(self.logger, "a"))
 		return output_sum
 
@@ -108,8 +105,8 @@ class WeightedTsetlinMachine:
 		
 		# Map the total clause outputs into a continuous value using max and min values of the target series
 		output_sum = self.sum_up_clause_votes()
-		output_value = ((output_sum * (self.max_target-self.min_target))/ self.threshold) + self.min_target
-		# output_value = (output_sum * self.max_target)/self.threshold
+		output_value = ((output_sum * (self.max_target-self.min_target))/ (self.threshold * np.amax(self.weights))) + self.min_target
+
 		print("Pred y: {}".format(output_value), file=open(self.logger, "a"))
 		return output_value
 
@@ -143,6 +140,8 @@ class WeightedTsetlinMachine:
 	# Use this method directly for online and incremental training.
 
 	def update(self, X, y):
+		fb_t1_ctr = 0
+		fb_t2_ctr = 0
 
 		print("FIT", file=open(self.logger, "a"))
 
@@ -162,8 +161,8 @@ class WeightedTsetlinMachine:
 		### Calculate Output Value ###
 		##############################
 
-		output_value = ((output_sum * (self.max_target-self.min_target))/ self.threshold) + self.min_target
-		# output_value = (output_sum * self.max_target)/self.threshold
+		output_value = ((output_sum * (self.max_target-self.min_target))/ (self.threshold * np.amax(self.weights))) + self.min_target
+
 		###########################################
 		### Deciding the feedbck to each clause ###
 		###########################################
@@ -175,13 +174,11 @@ class WeightedTsetlinMachine:
 		# Type I feedback if target is higher than the predicted value
 		if y > output_value:
 			for j in range(self.number_of_clauses):
-				self.weights[j] += 1
 				if 1.0*random.randint(0, RAND_MAX)/RAND_MAX < 1.0*(abs(y-output_value))/(self.max_target - self.min_target):
 					self.feedback_to_clauses[j] += 1
 					
 		# Type II feedback if target is lower than the predicted value
 		elif y < output_value:
-			self.weights[j] -= 1
 			for j in range(self.number_of_clauses):
 				if 1.0*random.randint(0, RAND_MAX)/RAND_MAX < 1.0*(abs(y-output_value))/(self.max_target - self.min_target):
 					self.feedback_to_clauses[j] -= 1
@@ -190,7 +187,7 @@ class WeightedTsetlinMachine:
 
 		for j in range(self.number_of_clauses):
 			if self.feedback_to_clauses[j] > 0:
-
+				fb_t1_ctr += 1
 				########################
 				### Type I Feedback  ###
 				########################
@@ -205,7 +202,8 @@ class WeightedTsetlinMachine:
 							if self.ta_state[j,k,1] > 1:
 								self.ta_state[j,k,1] -= 1
 
-				if self.clause_output[j] == 1:					
+				if self.clause_output[j] == 1:
+					self.weights[j] += 1					
 					for k in range(self.number_of_features):
 						if X[k] == 1:
 							if 1.0*random.randint(0, RAND_MAX)/RAND_MAX <= 1.0*(self.s-1)/self.s:
@@ -226,7 +224,9 @@ class WeightedTsetlinMachine:
 									self.ta_state[j,k,0] -= 1
 					
 			elif self.feedback_to_clauses[j] < 0:
-				
+				fb_t2_ctr += 1
+				if self.weights[j] > 0:
+					self.weights[j] -= 1
 				#########################
 				### Type II Feedback  ###
 				#########################
@@ -242,7 +242,7 @@ class WeightedTsetlinMachine:
 							if action_include_negated == 0 and self.ta_state[j,k,1] < self.number_of_states*2:
 								self.ta_state[j,k,1] += 1
 		print("TA WEIGHTS AFTER FEEDBACK:\n{}".format(self.weights), file=open(self.logger, "a"))
-
+		print("FEEDBACK DISTRIBUTION: t1: {}\t t2: {}".format(fb_t1_ctr, fb_t2_ctr), file=open(self.logger, "a"))
 
 	#########################################################
 	### Batch Mode Training of Regression Tsetlin Machine ###
