@@ -39,6 +39,8 @@ CONFIG_TEST_SAVE_PATH = os.path.join(os.path.dirname(os.path.realpath(__file__))
 # NOTE: DEFINING A STDOUT LOGGER TO STORE ALL PRINT STATEMENTS FOR FUTURE USE
 STDOUT_LOG = os.path.join(os.path.dirname(os.path.realpath(__file__)), "logger/txt_logs/run_"+strftime("%Y%m%d_%H%M%S")+".txt")
 
+BIN_DIST_FILE = os.path.join(os.path.dirname(os.path.realpath(__file__)), "logger/bin_dist/bin_dist"+strftime("%Y%m%d_%H%M%S")+".png")
+
 class RTMQL:
 	def __init__(self, environment, config, epsilon_decay_config="EDF"):
 		super().__init__()
@@ -295,7 +297,7 @@ def main():
 		# Reset state to start
 		state = env.reset()
 		# Discretize and reshape state
-		state = discretizer.cartpole_binarizer(input_state=state, n_bins=binarized_length-1, bin_type=binarizer)
+		state = discretizer.cartpole_binarizer(input_state=state, n_bins=binarized_length, bin_type=binarizer)
 		state = np.reshape(state, [1, feature_length * env.observation_space.shape[0]])[0]
 		
 
@@ -308,7 +310,7 @@ def main():
 			next_state, reward, done, info = env.step(action)
 			reward = reward if not done else -reward
 			# Discretize and reshape next_state
-			next_state = discretizer.cartpole_binarizer(input_state=next_state, n_bins=binarized_length-1, bin_type=binarizer)
+			next_state = discretizer.cartpole_binarizer(input_state=next_state, n_bins=binarized_length, bin_type=binarizer)
 			next_state = np.reshape(next_state, [1, feature_length * env.observation_space.shape[0]])[0]
 			print("Next State: {0}".format(next_state), file=open(STDOUT_LOG, "a"))
 			# Memorization
@@ -361,6 +363,8 @@ def main():
 	store_config_tested(config, win_ctr, run_dt)
 
 	neptune.log_artifact(CONFIG_PATH)
+	
+	discretizer.plot_bin_dist(plot_file=BIN_DIST_FILE, binarizer=binarizer)
 	
 
 
