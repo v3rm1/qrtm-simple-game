@@ -35,7 +35,7 @@ qrtm_params:
   incremental: True
   weighted_clauses: False
   # Set as multiple of number_of_features
-  ta_states: 10
+  ta_states: 2
 
 preproc_params:
   # Binarizer has to be a string 

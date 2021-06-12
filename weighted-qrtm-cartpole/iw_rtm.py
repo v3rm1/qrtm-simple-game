@@ -75,13 +75,17 @@ class WeightedTsetlinMachine:
 	def sum_up_clause_votes(self):
 		
 		j = 0
-
+		wt_sum = np.sum(self.weights) if np.sum(self.weights) > 0 else 1 
 		output_sum = 0
 		for j in range(self.number_of_clauses):
-			output_sum += self.weights[j] * self.clause_output[j] * self.clause_sign[j]
+			output_sum += self.weights[j] * self.clause_output[j] * self.clause_sign[j] / wt_sum
 		
-		if output_sum < 0:
+		if output_sum > self.threshold:
 			output_sum = self.threshold
+		
+		elif output_sum < 0:
+			output_sum = 0
+
 		print("Sum of clause votes: {}".format(output_sum), file=open(self.logger, "a"))
 		return output_sum
 
@@ -105,7 +109,7 @@ class WeightedTsetlinMachine:
 		
 		# Map the total clause outputs into a continuous value using max and min values of the target series
 		output_sum = self.sum_up_clause_votes()
-		output_value = ((output_sum * (self.max_target-self.min_target))/ (self.threshold * np.amax(self.weights))) + self.min_target
+		output_value = ((output_sum * (self.max_target-self.min_target))/ (self.threshold)) + self.min_target
 
 		print("Pred y: {}".format(output_value), file=open(self.logger, "a"))
 		return output_value
@@ -156,13 +160,13 @@ class WeightedTsetlinMachine:
 		###########################
 		print("INPUT: X: {}\ty: {}".format(X, y), file=open(self.logger, "a"))
 		output_sum = self.sum_up_clause_votes()
-
+		print("WEIGHTS: {}".format(self.weights), file=open(self.logger, "a"))
 		##############################
 		### Calculate Output Value ###
 		##############################
 
-		output_value = ((output_sum * (self.max_target-self.min_target))/ (self.threshold * np.amax(self.weights))) + self.min_target
-
+		output_value = ((output_sum * (self.max_target-self.min_target))/ (self.threshold)) + self.min_target
+		print("PRED y: {}".format(output_value), file=open(self.logger, "a"))
 		###########################################
 		### Deciding the feedbck to each clause ###
 		###########################################
