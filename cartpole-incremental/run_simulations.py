@@ -40,6 +40,7 @@ CONFIG_TEST_SAVE_PATH = os.path.join(os.path.dirname(os.path.realpath(__file__))
 # NOTE: DEFINING A STDOUT LOGGER TO STORE ALL PRINT STATEMENTS FOR FUTURE USE
 STDOUT_LOG = os.path.join(os.path.dirname(os.path.realpath(__file__)), "run_"+strftime("%Y%m%d_%H%M%S")+".txt")
 
+BIN_DIST_FILE = os.path.join(os.path.dirname(os.path.realpath(__file__)), "logger/bin_dist/bin_dist"+strftime("%Y%m%d_%H%M%S")+".png")
 class RTMQL:
 	def __init__(self, environment, config, epsilon_decay_config="EDF"):
 		super().__init__()
@@ -342,7 +343,11 @@ def main():
 	# Store configuration tested, win count and timestamp of experiment
 	store_config_tested(config, win_ctr, run_dt)
 
-	neptune.log_artifact(STDOUT_LOG)
+	# neptune.log_artifact(STDOUT_LOG)
+	neptune.log_artifact(CONFIG_PATH)
+
+	discretizer.plot_bin_dist(plot_file=BIN_DIST_FILE, binarizer=binarizer)
+	
 	
 
 
