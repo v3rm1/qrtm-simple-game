@@ -51,13 +51,12 @@ class CustomDiscretizer:
         return binary_rep
 
     def _less_than_binned_binarizer(self, fp_num, range_min, range_max, n_bins=16):
-
         if fp_num > range_max:
             fp_num = range_max
-
+            
         binary_rep = np.zeros(shape=n_bins, dtype=int)
         bin_delta = (np.absolute(range_max) + np.absolute(range_min))/n_bins
-        for i in range(0, n_bins):
+        for i in range(1, n_bins+1):
             bin_max = range_min + i * bin_delta
             if fp_num <= bin_max:
                 binary_rep[i] = 1
