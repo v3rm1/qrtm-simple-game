@@ -59,7 +59,7 @@ class CustomDiscretizer:
         for i in range(1, n_bins+1):
             bin_max = range_min + i * bin_delta
             if fp_num <= bin_max:
-                binary_rep[i] = 1
+                binary_rep[i-1] = 1
                 bin_label = "bin"+str(i)
 
         self.bin_labels.append(bin_label)

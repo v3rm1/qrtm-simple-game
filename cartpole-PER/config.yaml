@@ -45,4 +45,4 @@ preproc_params:
   # U: Unsigned binarizer
   # L: Less than binning binarizer
   # S: Simple binarizer ** DEFAULT feature length should be set to 2 and number of features to 8
-  binarizer: L
+  binarizer: U
