@@ -299,7 +299,7 @@ def main():
 		# Reset state to start
 		state = env.reset()
 		# Discretize and reshape state
-		state = discretizer.cartpole_binarizer(input_state=state, n_bins=binarized_length-1, bin_type=binarizer)
+		state = discretizer.cartpole_binarizer(input_state=state, n_bins=binarized_length, bin_type=binarizer)
 		state = np.reshape(state, [1, feature_length * env.observation_space.shape[0]])[0]
 		
 
@@ -312,7 +312,7 @@ def main():
 			next_state, reward, done, info = env.step(action)
 			reward = reward if not done else -reward
 			# Discretize and reshape next_state
-			next_state = discretizer.cartpole_binarizer(input_state=next_state, n_bins=binarized_length-1, bin_type=binarizer)
+			next_state = discretizer.cartpole_binarizer(input_state=next_state, n_bins=binarized_length, bin_type=binarizer)
 			next_state = np.reshape(next_state, [1, feature_length * env.observation_space.shape[0]])[0]
 			print("Next State: {0}".format(next_state), file=open(STDOUT_LOG, "a"))
 			# Memorization

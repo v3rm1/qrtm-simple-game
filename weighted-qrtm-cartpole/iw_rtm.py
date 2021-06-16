@@ -80,12 +80,12 @@ class WeightedTsetlinMachine:
 		for j in range(self.number_of_clauses):
 			output_sum += self.weights[j] * self.clause_output[j] * self.clause_sign[j]
 		
-		if output_sum > self.threshold:
-			output_sum = self.threshold
+		# if output_sum > self.threshold:
+		# 	output_sum = self.threshold
 		
-		elif output_sum < 0:
-			output_sum = 0
-
+		# elif output_sum < 0:
+		# 	output_sum = 0
+		print("Clause votes: {}".format(self.clause_output), file=open(self.logger, "a"))
 		print("Sum of clause votes: {}".format(output_sum), file=open(self.logger, "a"))
 		return output_sum
 
