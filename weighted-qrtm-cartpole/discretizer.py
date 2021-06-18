@@ -26,6 +26,8 @@ class CustomDiscretizer:
         return binary_rep
 
     def _unsigned_binarizer(self, fp_num, range_min, range_max, n_bins=16):
+        fp_num = range_min if fp_num < range_min else fp_num
+        fp_num = range_max if fp_num > range_max else fp_num
         binary_rep = np.zeros(shape=n_bins, dtype=int)
         bin_delta = (np.absolute(range_max) + np.absolute(range_min))/n_bins
         for i in range(0, n_bins):
@@ -51,8 +53,8 @@ class CustomDiscretizer:
         return binary_rep
 
     def _less_than_binned_binarizer(self, fp_num, range_min, range_max, n_bins=16):
-        if fp_num > range_max:
-            fp_num = range_max
+        fp_num = range_min if fp_num < range_min else fp_num
+        fp_num = range_max if fp_num > range_max else fp_num
             
         binary_rep = np.zeros(shape=n_bins, dtype=int)
         bin_delta = (np.absolute(range_max) + np.absolute(range_min))/n_bins
@@ -112,18 +114,18 @@ class CustomDiscretizer:
             op_4 = self._quartile_binner(input_state[3], 500)
         elif bin_type == "U":
             # unsigned binarizer
-            op_1 = self._unsigned_binarizer(input_state[0], -3, 3, n_bins)
-            op_2 = self._unsigned_binarizer(input_state[1], -500, 500, n_bins)
-            op_3 = self._unsigned_binarizer(input_state[2], -42, 42, n_bins)
-            op_4 = self._unsigned_binarizer(input_state[3], -500, 500, n_bins)
+            op_1 = self._unsigned_binarizer(input_state[0], -1, 1, n_bins)
+            op_2 = self._unsigned_binarizer(input_state[1], -75, 75, n_bins)
+            op_3 = self._unsigned_binarizer(input_state[2], -10, 10, n_bins)
+            op_4 = self._unsigned_binarizer(input_state[3], -75, 75, n_bins)
 
         elif bin_type == "L":
             # lesser than binned binarizer
             # based on arXiv:1905.04199v2 [cs.LG]
-            op_1 = self._less_than_binned_binarizer(input_state[0], -1.5, 1.5, n_bins)
-            op_2 = self._less_than_binned_binarizer(input_state[1], -100, 100, n_bins)
-            op_3 = self._less_than_binned_binarizer(input_state[2], -15, 15, n_bins)
-            op_4 = self._less_than_binned_binarizer(input_state[3], -100, 100, n_bins)
+            op_1 = self._less_than_binned_binarizer(input_state[0], -1, 1, n_bins)
+            op_2 = self._less_than_binned_binarizer(input_state[1], -75, 75, n_bins)
+            op_3 = self._less_than_binned_binarizer(input_state[2], -10, 10, n_bins)
+            op_4 = self._less_than_binned_binarizer(input_state[3], -75, 75, n_bins)
 
         else:
             op_1 = self._simple_binarizer(input_state[0], bits=n_bins-1)
