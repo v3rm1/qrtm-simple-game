@@ -123,8 +123,9 @@ class RTMQL:
 	
 	def experience_replay(self, episode):
 		td_err_list = []
+		q_val_list = []
 		if len(self.memory) < self.replay_batch:
-			return 0
+			return 0, 0
 		# Generate random batch from memory
 		batch = random.sample(self.memory, self.replay_batch)
 
@@ -172,6 +173,7 @@ class RTMQL:
 			print("Expectation - Next State: {}".format([self.agent_1.predict(next_state), self.agent_2.predict(next_state)]), file=open(STDOUT_LOG, "a"))
 
 			td_err_list.append(pow(td_error, 2))
+			q_val_list.append(q_values)
 		
 		rms_td_err = np.sqrt(np.mean(td_err_list))
 
@@ -181,7 +183,8 @@ class RTMQL:
 		else:
 			# Exponential epsilon decay
 			self.epsilon = self.exp_eps_decay(episode)
-		return rms_td_err
+		qmax_init = np.max(q_val_list[0])
+		return rms_td_err, qmax_init
 		
 def load_config(config_file):
 	with open(config_file, 'r') as stream:
@@ -341,13 +344,15 @@ def main():
 				break
 		# if step < 195:	
 		# 	# Store TD error from experience replay
-		rms_td_err_ep = rtm_agent.experience_replay(curr_ep)
+		
+		rms_td_err_ep, qmax_init = rtm_agent.experience_replay(curr_ep)
 		# else:
 		# 	rms_td_err_ep = 0
 		print("episode td err RMS: {}".format(rms_td_err_ep))
 		# Append average TD error per episode to list
 		td_error.append(rms_td_err_ep)
 		neptune.log_metric('TD_ERR (RMS)', rms_td_err_ep)
+		neptune.log_metric('Max Initial Q', qmax_init)
 		
 	print("Len of TDERR array: {}".format(len(td_error)))
 

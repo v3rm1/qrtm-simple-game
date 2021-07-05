@@ -9,8 +9,8 @@ learning_params:
     epsilon_decay: 0.99
   SEDF:
     tail: 0.4
-    slope: 0.3
-    tail_gradient: 0.3
+    slope: 0.1
+    tail_gradient: 0.4
   epsilon_decay_function: SEDF 
 
 memory_params:
@@ -29,9 +29,9 @@ qrtm_params:
   number_of_features: 32
   feature_length: 8
   # number_of_clauses = 2 * T ALWAYS
-  number_of_clauses: 32
-  T: 32
-  s: 10
+  number_of_clauses: 200
+  T: 1
+  s: 5
   incremental: True
   weighted_clauses: False
   # Set as multiple of number_of_features

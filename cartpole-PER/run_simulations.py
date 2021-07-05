@@ -138,6 +138,7 @@ class RTMQL:
 	
 	def experience_replay(self, episode):
 		td_err_list = []
+		q_val_list = []
 		batch, idxs, is_weights = self.memory.sample_tree(self.replay_batch)
 		batch = np.array(batch, dtype=object).transpose()
 
@@ -170,8 +171,10 @@ class RTMQL:
 
 			print("TD_ERROR: {}".format(td_error), file=open(STDOUT_LOG, "a"))
 			td_err_list.append(pow(td_error, 2))
+			q_val_list.append(q_values)
 		
 		rms_td_err = np.sqrt(np.mean(td_err_list))
+		qmax_init = np.max(q_val_list[0])
 
 		# Epsilon decay
 		if self.eps_decay == "SEDF":
@@ -179,7 +182,7 @@ class RTMQL:
 		else:
 			# Exponential epsilon decay
 			self.epsilon = self.exp_eps_decay(episode)
-		return rms_td_err
+		return rms_td_err, qmax_init
 		
 def load_config(config_file):
 	with open(config_file, 'r') as stream:
@@ -245,7 +248,7 @@ def store_config_tested(config_data, win_count, run_date, tested_configs_file_pa
 	return
 
 def main():
-	neptune.create_experiment(name="RTM-Cartpole", tags=["local", "4-bit features"])
+	neptune.create_experiment(name="RTM-Cartpole-PER", tags=["local"])
 
 	if TEST_VAR:
 		neptune.append_tag("test")
@@ -339,13 +342,14 @@ def main():
 				break
 		# if step < 195:	
 		# 	# Store TD error from experience replay
-		rms_td_err_ep = rtm_agent.experience_replay(curr_ep)
+		rms_td_err_ep, qmax_init = rtm_agent.experience_replay(curr_ep)
 		# else:
 		# 	rms_td_err_ep = 0
 		print("episode td err RMS: {}".format(rms_td_err_ep))
 		# Append average TD error per episode to list
 		td_error.append(rms_td_err_ep)
 		neptune.log_metric('TD_ERR (RMS)', rms_td_err_ep)
+		neptune.log_metric('Max Init Q', qmax_init)
 		
 	print("Len of TDERR array: {}".format(len(td_error)))
 
