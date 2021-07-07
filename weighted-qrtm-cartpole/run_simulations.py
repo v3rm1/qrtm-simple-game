@@ -28,7 +28,7 @@ random.seed(seed_value)
 np.random.seed(seed_value)
 
 # A variable for attaching test tag to the experiment
-TEST_VAR = False
+TEST_VAR = True
 
 # Path to file containing all configurations for the variables used by the q-rtm system
 CONFIG_PATH = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'config.yaml')
@@ -133,6 +133,7 @@ class RTMQL:
 			q_update = 0
 			# Compute q-values for state
 			q_values = [self.agent_1.predict(state), self.agent_2.predict(state)]
+			q_val_list.append(q_values)
 			# Compute extected q-values for next state
 			target_q = [self.agent_1.predict(next_state), self.agent_2.predict(next_state)]
 
@@ -173,7 +174,7 @@ class RTMQL:
 			print("Expectation - Next State: {}".format([self.agent_1.predict(next_state), self.agent_2.predict(next_state)]), file=open(STDOUT_LOG, "a"))
 
 			td_err_list.append(pow(td_error, 2))
-			q_val_list.append(q_values)
+			
 		
 		rms_td_err = np.sqrt(np.mean(td_err_list))
 
@@ -183,7 +184,7 @@ class RTMQL:
 		else:
 			# Exponential epsilon decay
 			self.epsilon = self.exp_eps_decay(episode)
-		qmax_init = np.max(q_val_list[0])
+		qmax_init = np.amax(q_val_list)
 		return rms_td_err, qmax_init
 		
 def load_config(config_file):
