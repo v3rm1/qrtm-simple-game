@@ -5,4 +5,4 @@
 #SBATCH --job-name=PER_qrtm_cartpole
 #SBATCH --mem=2000
 module restore thesis_mods
-python3 ~/../../data/s3893030/cartpole/run_simulations.py
+python3 ~/../../data/s3893030/qrtm-simple-game/mountaincar/qrtm-inc/mc-inc.sh
