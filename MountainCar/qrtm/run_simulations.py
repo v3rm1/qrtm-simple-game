@@ -15,7 +15,7 @@ from rtm import TsetlinMachine
 import neptune
 
 
-neptune.init(project_qualified_name='v3rm1/QRTM-mountaincar')
+neptune.init(project_qualified_name='v3rm1/MC-QRTM')
 
 # NOTE: SETTING GLOBAL SEED VALUES FOR CONSISTENT RESULTS IN EXPERIMENTAL SESSIONS
 # Set a seed value
@@ -28,7 +28,7 @@ random.seed(seed_value)
 np.random.seed(seed_value)
 
 # A variable for attaching test tag to the experiment
-TEST_VAR = False
+TEST_VAR = True
 
 # Path to file containing all configurations for the variables used by the q-rtm system
 CONFIG_PATH = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'config.yaml')
@@ -36,7 +36,7 @@ CONFIG_PATH = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'config.
 CONFIG_TEST_SAVE_PATH = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'tested_configs.csv')
 
 # NOTE: DEFINING A STDOUT LOGGER TO STORE ALL PRINT STATEMENTS FOR FUTURE USE
-STDOUT_LOG = os.path.join(os.path.dirname(os.path.realpath(__file__)), "run_"+strftime("%Y%m%d_%H%M%S")+".txt")
+STDOUT_LOG = os.path.join(os.path.dirname(os.path.realpath(__file__)), "logger/txt_logs/run_"+strftime("%Y%m%d_%H%M%S")+".txt")
 
 BIN_DIST_FILE = os.path.join(os.path.dirname(os.path.realpath(__file__)), "logger/bin_dist/bin_dist"+strftime("%Y%m%d_%H%M%S")+".png")
 
@@ -248,7 +248,7 @@ def store_config_tested(config_data, win_count, run_date, tested_configs_file_pa
 	return
 
 def main():
-	neptune.create_experiment(name="RTM-mountaincar", tags=["local", "4-bit features"])
+	neptune.create_experiment(name="RTM", tags=["local"])
 
 	if TEST_VAR:
 		neptune.append_tag("test")

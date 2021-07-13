@@ -16,7 +16,7 @@ from per_memory import Memory
 import neptune
 
 
-neptune.init(project_qualified_name='v3rm1/QRTM-mountaincar-PER')
+neptune.init(project_qualified_name='v3rm1/MC-QRTM')
 
 # NOTE: SETTING GLOBAL SEED VALUES FOR CONSISTENT RESULTS IN EXPERIMENTAL SESSIONS
 # Set a seed value
@@ -248,7 +248,7 @@ def store_config_tested(config_data, win_count, run_date, tested_configs_file_pa
 	return
 
 def main():
-	neptune.create_experiment(name="RTM-mountaincar-PER", tags=["local"])
+	neptune.create_experiment(name="RTM-PER", tags=["local"])
 
 	if TEST_VAR:
 		neptune.append_tag("test")

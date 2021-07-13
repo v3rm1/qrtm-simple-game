@@ -15,7 +15,7 @@ from iw_rtm import WeightedTsetlinMachine
 import neptune
 
 
-neptune.init(project_qualified_name='v3rm1/IW-QRTM-mountaincar')
+neptune.init(project_qualified_name='v3rm1/MC-QRTM')
 
 # NOTE: SETTING GLOBAL SEED VALUES FOR CONSISTENT RESULTS IN EXPERIMENTAL SESSIONS
 # Set a seed value
@@ -251,7 +251,7 @@ def store_config_tested(config_data, win_count, run_date, tested_configs_file_pa
 	return
 
 def main():
-	neptune.create_experiment(name="IWRTM-mountaincar", tags=["local"])
+	neptune.create_experiment(name="RTM-IW", tags=["local"])
 
 	if TEST_VAR:
 		neptune.append_tag("test")

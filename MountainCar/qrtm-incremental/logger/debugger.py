@@ -10,7 +10,7 @@ plt.style.use('seaborn-muted')
 
 # TODO: Change this when using on local. The current path is hardcoded for Peregrine.
 # LAPTOP PATH
-DEBUG_PLOT_DIR = os.path.join(os.getcwd(), "cartpole_incremental/logger/debug/")
+DEBUG_PLOT_DIR = os.path.join(os.path.dirname(os.path.realpath(__file__)), "debug/")
 
 # PEREGRINE PATH
 # DEBUG_PLOT_DIR = "/data/s3893030/cartpole/logger/debug/"

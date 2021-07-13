@@ -16,7 +16,7 @@ from rtm import TsetlinMachine
 import neptune
 
 
-neptune.init(project_qualified_name='v3rm1/QRTMInc-mountaincar')
+neptune.init(project_qualified_name='v3rm1/MC-QRTM')
 
 
 # NOTE: SETTING GLOBAL SEED VALUES FOR CONSISTENT RESULTS IN EXPERIMENTAL SESSIONS
@@ -220,7 +220,7 @@ def store_config_tested(config_data, win_count, run_date, tested_configs_file_pa
 	return
 
 def main():
-	neptune.create_experiment(name="RTM-mountaincar", tags=["local", "4-bit features"])
+	neptune.create_experiment(name="RTM-Inc", tags=["local"])
 
 	if TEST_VAR:
 		neptune.append_tag("test")

@@ -10,7 +10,7 @@ AVG_SCORE = 195
 
 # TODO: Change this when using on local. The current path is hardcoded for Peregrine.
 # LAPTOP PATH
-SCORES_DIR = os.path.join(os.getcwd(), "weighted-qrtm-cartpole/logger/scores/")
+SCORES_DIR = os.path.join(os.path.dirname(os.path.realpath(__file__)), "scores/")
 
 # PEREGRINE PATH
 # SCORES_DIR = "/data/s3893030/cartpole/logger/scores/"
