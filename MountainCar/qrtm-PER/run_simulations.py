@@ -12,6 +12,7 @@ from discretizer import CustomDiscretizer
 from logger.debugger import DebugLogger
 from rtm import TsetlinMachine
 from per_memory import Memory
+import sys
 
 import neptune
 
@@ -29,7 +30,7 @@ random.seed(seed_value)
 np.random.seed(seed_value)
 
 # A variable for attaching test tag to the experiment
-TEST_VAR = False
+TEST_VAR = True
 
 # Path to file containing all configurations for the variables used by the q-rtm system
 CONFIG_PATH = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'config.yaml')
@@ -38,7 +39,7 @@ CONFIG_TEST_SAVE_PATH = os.path.join(os.path.dirname(os.path.realpath(__file__))
 
 # NOTE: DEFINING A STDOUT LOGGER TO STORE ALL PRINT STATEMENTS FOR FUTURE USE
 STDOUT_LOG = os.path.join(os.path.dirname(os.path.realpath(__file__)), "logger/txt_logs/run_"+strftime("%Y%m%d_%H%M%S")+".txt")
-
+sys.stdout = open(STDOUT_LOG, 'w')
 BIN_DIST_FILE = os.path.join(os.path.dirname(os.path.realpath(__file__)), "logger/bin_dist/bin_dist"+strftime("%Y%m%d_%H%M%S")+".png")
 
 class RTMQL:
@@ -122,17 +123,16 @@ class RTMQL:
 			s=self.s,
 			threshold=self.T,
 			max_target=self.max_score,
-			min_target=self.min_score,
-			logger=STDOUT_LOG
+			min_target=self.min_score
 		)
 		return self.tm_agent
 
 	def act(self, state):
 		if np.random.rand() <= self.epsilon:
-			print("RANDOM ACTION", file=open(STDOUT_LOG, "a"))
+			print("RANDOM ACTION")
 			a = random.randrange(self.action_space)
 			return a
-		print("LEARNER ACTION", file=open(STDOUT_LOG, "a"))
+		print("LEARNER ACTION")
 		q_values = [self.agent_1.predict(state), self.agent_2.predict(state)]
 		return np.argmax(q_values)
 	
@@ -169,7 +169,7 @@ class RTMQL:
 			self.agent_1.update(state, q_values[0])
 			self.agent_2.update(state, q_values[1])
 
-			print("TD_ERROR: {}".format(td_error), file=open(STDOUT_LOG, "a"))
+			print("TD_ERROR: {}".format(td_error))
 			td_err_list.append(pow(td_error, 2))
 			q_val_list.append(q_values)
 		
@@ -259,7 +259,7 @@ def main():
 	run_dt = strftime("%Y%m%d_%H%M%S")
 	epsilon_decay_function = config['learning_params']['epsilon_decay_function']
 	feature_length = config['qrtm_params']['feature_length']
-	print("Configuration file loaded. Creating environment.", file=open(STDOUT_LOG, "a"))
+	print("Configuration file loaded. Creating environment.")
 	env = gym.make("MountainCar-v0")
 	if gamma<1:
 		neptune.append_tag("gamma="+str(gamma))
@@ -279,9 +279,9 @@ def main():
 	debug_log = DebugLogger("MountainCar-v0")
 	score_log = ScoreLogger("MountainCar-v0", episodes)
 
-	print("Initializing custom discretizer.", file=open(STDOUT_LOG, "a"))
+	print("Initializing custom discretizer.")
 	discretizer = CustomDiscretizer()
-	print("Initializing Q-RTM Agent.", file=open(STDOUT_LOG, "a"))
+	print("Initializing Q-RTM Agent.")
 	rtm_agent = RTMQL(env, config, epsilon_decay_function)
 	binarized_length = int(config['qrtm_params']['feature_length'])
 	binarizer = config['preproc_params']['binarizer']
@@ -308,14 +308,14 @@ def main():
 			step += 1
 			# Request agent action
 			action = rtm_agent.act(state)
-			print("State: {0}".format(state), file=open(STDOUT_LOG, "a"))
+			print("State: {0}".format(state))
 			# Run simulation step in environment, retrieve next state, reward and game status
 			next_state, reward, done, info = env.step(action)
 			reward = reward if not done else -reward
 			# Discretize and reshape next_state
 			next_state = discretizer.cartpole_binarizer(input_state=next_state, n_bins=binarized_length, bin_type=binarizer)
 			next_state = np.reshape(next_state, [1, feature_length * env.observation_space.shape[0]])[0]
-			print("Next State: {0}".format(next_state), file=open(STDOUT_LOG, "a"))
+			print("Next State: {0}".format(next_state))
 			# Memorization
 			rtm_agent.memorize(state, action, reward, next_state, done)
 
@@ -328,7 +328,7 @@ def main():
 				if step > 195:
 					win_ctr += 1
 
-				print("Episode: {0}\nEpsilon: {1}\tScore: {2}".format(curr_ep, rtm_agent.epsilon, step), file=open(STDOUT_LOG, "a"))
+				print("Episode: {0}\nEpsilon: {1}\tScore: {2}".format(curr_ep, rtm_agent.epsilon, step))
 				score_log.add_score(step,
 				curr_ep,
 				gamma,
@@ -361,7 +361,7 @@ def main():
 	
 	
 	# Print win counter
-	print("win_ctr: {}".format(win_ctr), file=open(STDOUT_LOG, "a"))
+	print("win_ctr: {}".format(win_ctr))
 
 	# Store configuration tested, win count and timestamp of experiment
 	store_config_tested(config, win_ctr, run_dt)

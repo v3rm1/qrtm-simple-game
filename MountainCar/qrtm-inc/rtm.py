@@ -53,7 +53,7 @@ class TsetlinMachine:
 				if (action_include == 1 and X[k] == 0) or (action_include_negated == 1 and X[k] == 1):
 					self.clause_output[j] = 0
 					break
-		print("clause output: {}".format(self.clause_output))
+		# print("clause output: {}".format(self.clause_output))
 
 
 	# Translate automata state to action 
@@ -90,22 +90,20 @@ class TsetlinMachine:
 	###########################################
 
 	def predict(self, X):
-		print("PREDICT")
-
+		
 		###############################
 		### Calculate Clause Output ###
 		###############################
-		print("INPUT: {}".format(X))
+
 		self.calculate_clause_output(X)
 
 		###########################
 		### Sum up Clause Votes ###
 		###########################
-		
+		print("INPUT: {}".format(X))
 		# Map the total clause outputs into a continuous value using max and min values of the target series
 		output_sum = self.sum_up_clause_votes()
 		output_value = ((output_sum * (self.max_target-self.min_target))/ self.threshold) + self.min_target
-		# output_value = (output_sum * self.max_target)/self.threshold
 		print("Pred y: {}".format(output_value))
 		return output_value
 
@@ -140,7 +138,7 @@ class TsetlinMachine:
 
 	def update(self, X, y):
 
-		print("FIT")
+		# print("FITTING:\nX:{}\ty:{}".format(X, y))
 
 		###############################
 		### Calculate Clause Output ###
@@ -159,7 +157,7 @@ class TsetlinMachine:
 		##############################
 
 		output_value = ((output_sum * (self.max_target-self.min_target))/ self.threshold) + self.min_target
-		# output_value = (output_sum * self.max_target)/self.threshold
+
 		###########################################
 		### Deciding the feedbck to each clause ###
 		###########################################
@@ -180,7 +178,7 @@ class TsetlinMachine:
 				if 1.0*random.randint(0, RAND_MAX)/RAND_MAX < 1.0*(abs(y-output_value))/(self.max_target - self.min_target):
 					self.feedback_to_clauses[j] -= 1
 		# print("TA STATE BEFORE FEEDBACK:\n{}".format(self.ta_state))
-		print("Feedback type array: {}".format(self.feedback_to_clauses))
+		# print("Feedback type array: {}".format(self.feedback_to_clauses))
 
 		for j in range(self.number_of_clauses):
 			if self.feedback_to_clauses[j] > 0:

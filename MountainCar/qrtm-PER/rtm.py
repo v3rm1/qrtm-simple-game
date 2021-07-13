@@ -13,7 +13,7 @@ class TsetlinMachine:
 
 
 	# Initialization of the Regression Tsetlin Machine
-	def __init__(self, number_of_clauses, number_of_features, number_of_states, s, threshold, max_target, min_target, logger):
+	def __init__(self, number_of_clauses, number_of_features, number_of_states, s, threshold, max_target, min_target):
 
 		self.number_of_clauses = number_of_clauses
 		self.number_of_features = number_of_features
@@ -32,8 +32,7 @@ class TsetlinMachine:
 		# Data structures for intermediate calculations (clause output, summation of votes, and feedback to clauses)
 		self.clause_output = np.zeros(shape=(self.number_of_clauses), dtype=np.int32)
 		self.feedback_to_clauses = np.zeros(shape=(self.number_of_clauses), dtype=np.int32)
-		if logger != None:
-			self.logger = logger
+		
 		# Set up the Regression Tsetlin Machine structure
 		for j in range(self.number_of_clauses):
 			if j % 2 == 0:
@@ -54,7 +53,7 @@ class TsetlinMachine:
 				if (action_include == 1 and X[k] == 0) or (action_include_negated == 1 and X[k] == 1):
 					self.clause_output[j] = 0
 					break
-		print("clause output: {}".format(self.clause_output), file=open(self.logger, "a"))
+		print("clause output: {}".format(self.clause_output))
 
 
 	# Translate automata state to action 
@@ -82,7 +81,7 @@ class TsetlinMachine:
 		
 		elif output_sum < 0:
 			output_sum = 0
-		print("Sum of clause votes: {}".format(output_sum), file=open(self.logger, "a"))
+		print("Sum of clause votes: {}".format(output_sum))
 		return output_sum
 
 
@@ -91,12 +90,12 @@ class TsetlinMachine:
 	###########################################
 
 	def predict(self, X):
-		print("PREDICT", file=open(self.logger, "a"))
+		print("PREDICT")
 
 		###############################
 		### Calculate Clause Output ###
 		###############################
-		print("INPUT: {}".format(X), file=open(self.logger, "a"))
+		print("INPUT: {}".format(X))
 		self.calculate_clause_output(X)
 
 		###########################
@@ -107,7 +106,7 @@ class TsetlinMachine:
 		output_sum = self.sum_up_clause_votes()
 		output_value = ((output_sum * (self.max_target-self.min_target))/ self.threshold) + self.min_target
 		# output_value = (output_sum * self.max_target)/self.threshold
-		print("Pred y: {}".format(output_value), file=open(self.logger, "a"))
+		print("Pred y: {}".format(output_value))
 		return output_value
 
 	
@@ -141,7 +140,7 @@ class TsetlinMachine:
 
 	def update(self, X, y):
 
-		print("FIT", file=open(self.logger, "a"))
+		print("FIT")
 
 		###############################
 		### Calculate Clause Output ###
@@ -152,7 +151,7 @@ class TsetlinMachine:
 		###########################
 		### Sum up Clause Votes ###
 		###########################
-		print("INPUT: X: {}\ty: {}".format(X, y), file=open(self.logger, "a"))
+		print("INPUT: X: {}\ty: {}".format(X, y))
 		output_sum = self.sum_up_clause_votes()
 
 		##############################
@@ -180,8 +179,8 @@ class TsetlinMachine:
 			for j in range(self.number_of_clauses):
 				if 1.0*random.randint(0, RAND_MAX)/RAND_MAX < 1.0*(abs(y-output_value))/(self.max_target - self.min_target):
 					self.feedback_to_clauses[j] -= 1
-		# print("TA STATE BEFORE FEEDBACK:\n{}".format(self.ta_state), file=open(self.logger, "a"))
-		print("Feedback type array: {}".format(self.feedback_to_clauses), file=open(self.logger, "a"))
+		# print("TA STATE BEFORE FEEDBACK:\n{}".format(self.ta_state))
+		print("Feedback type array: {}".format(self.feedback_to_clauses))
 
 		for j in range(self.number_of_clauses):
 			if self.feedback_to_clauses[j] > 0:
@@ -236,7 +235,7 @@ class TsetlinMachine:
 						elif X[k] == 1:
 							if action_include_negated == 0 and self.ta_state[j,k,1] < self.number_of_states*2:
 								self.ta_state[j,k,1] += 1
-		# print("TA STATES AFTER FEEDBACK:\n{}".format(self.ta_state), file=open(self.logger, "a"))
+		# print("TA STATES AFTER FEEDBACK:\n{}".format(self.ta_state))
 
 
 	#########################################################
@@ -248,7 +247,7 @@ class TsetlinMachine:
 		Xi = []
 		random_index = []
 
-		print("FITTING:\nX:{}\ty:{}".format(X, y), file=open(self.logger, "a"))
+		print("FITTING:\nX:{}\ty:{}".format(X, y))
 
 		Xi = np.zeros((self.number_of_features,), dtype=np.int32)
 		random_index = np.arange(number_of_examples)
