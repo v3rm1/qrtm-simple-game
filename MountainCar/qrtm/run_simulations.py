@@ -265,6 +265,8 @@ def main():
 	if gamma<1:
 		neptune.append_tag("gamma="+str(gamma))
 
+	
+
 
 	neptune.log_text('T', str(config['qrtm_params']['T']))
 	neptune.log_text('s', str(config['qrtm_params']['s']))
@@ -300,6 +302,7 @@ def main():
 
 		# Reset state to start
 		state = env.reset()
+		env.render()
 		# Discretize and reshape state
 		state = discretizer.cartpole_binarizer(input_state=state, n_bins=binarized_length, bin_type=binarizer)
 		state = np.reshape(state, [1, feature_length * env.observation_space.shape[0]])[0]
@@ -374,3 +377,4 @@ def main():
 
 if __name__ == "__main__":
 	main()
+	sys.stdout.close()

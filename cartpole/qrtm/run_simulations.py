@@ -38,7 +38,7 @@ CONFIG_TEST_SAVE_PATH = os.path.join(os.path.dirname(os.path.realpath(__file__))
 
 # NOTE: DEFINING A STDOUT LOGGER TO STORE ALL PRINT STATEMENTS FOR FUTURE USE
 STDOUT_LOG = os.path.join(os.path.dirname(os.path.realpath(__file__)), "logger/txt_logs/run_"+strftime("%Y%m%d_%H%M%S")+".txt")
-sys.stdout = open(STDOUT_LOG, 'w')
+
 
 BIN_DIST_FILE = os.path.join(os.path.dirname(os.path.realpath(__file__)), "logger/bin_dist/bin_dist"+strftime("%Y%m%d_%H%M%S")+".png")
 
@@ -373,4 +373,6 @@ def main():
 
 
 if __name__ == "__main__":
+	sys.stdout = open(STDOUT_LOG, 'w')
 	main()
+	sys.stdout.close()
