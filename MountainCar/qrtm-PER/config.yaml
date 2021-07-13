@@ -14,28 +14,28 @@ learning_params:
   epsilon_decay_function: SEDF 
 
 memory_params:
-  memory_size: 100000
+  memory_size: 10000
   batch_size: 300
 
 game_params:
   episodes: 300
   reward: 1
-  max_score: 200
+  max_score: 1
   min_score: -1
-  action_space: 2
+  action_space: 3
 
 qrtm_params:
   # number_of_features = num_inputs [in this case, 4] * feature_length ALWAYS
-  number_of_features: 16
+  number_of_features: 8
   feature_length: 4
   # number_of_clauses = 2 * T ALWAYS
-  number_of_clauses: 200
-  T: 100
-  s: 10
+  number_of_clauses: 20
+  T: 10
+  s: 5
   incremental: True
   weighted_clauses: False
   # Set as multiple of number_of_features
-  ta_states: 6
+  ta_states: 3
 
 preproc_params:
   # Binarizer has to be a string 
@@ -43,6 +43,5 @@ preproc_params:
   # B: Binned binarizer
   # Q: Quartile binarizer
   # U: Unsigned binarizer
-  # L: Less than binning binarizer
   # S: Simple binarizer ** DEFAULT feature length should be set to 2 and number of features to 8
   binarizer: U
