@@ -18,10 +18,10 @@ memory_params:
   batch_size: 300
 
 game_params:
-  episodes: 300
+  episodes: 200
   reward: 1
-  max_score: 1
-  min_score: -1
+  max_score: -200
+  min_score: 0
   action_space: 3
 
 qrtm_params:
@@ -29,8 +29,8 @@ qrtm_params:
   number_of_features: 8
   feature_length: 4
   # number_of_clauses = 2 * T ALWAYS
-  number_of_clauses: 20
-  T: 10
+  number_of_clauses: 200
+  T: 100
   s: 5
   incremental: True
   weighted_clauses: False
