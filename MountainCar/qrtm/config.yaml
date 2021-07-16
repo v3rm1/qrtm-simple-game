@@ -18,7 +18,7 @@ memory_params:
   batch_size: 300
 
 game_params:
-  episodes: 200
+  episodes: 10
   reward: 1
   max_score: -200
   min_score: 0
