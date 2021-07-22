@@ -15,7 +15,7 @@ learning_params:
 
 memory_params:
   memory_size: 100000
-  batch_size: 200
+  batch_size: 250
 
 game_params:
   episodes: 300
@@ -29,7 +29,7 @@ qrtm_params:
   number_of_features: 32
   feature_length: 8
   # number_of_clauses = 2 * T ALWAYS
-  number_of_clauses: 200
+  number_of_clauses: 500
   T: 1
   s: 5
   incremental: True

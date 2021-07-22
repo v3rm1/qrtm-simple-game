@@ -34,7 +34,7 @@ EXPT_DATA = os.path.join(os.path.dirname(os.path.realpath(__file__)), "expt_csv/
 
 
 class RTMQL:
-	def __init__(self, environment, config, epsilon_decay_config="EDF", logger=None):
+	def __init__(self, environment, config, epsilon_decay_config, logger):
 		super().__init__()
 
 		# Environment config
@@ -253,7 +253,7 @@ def main():
 		# 3. Set `numpy` pseudo-random generator at a fixed value
 		np.random.seed(seed_value)
 
-		neptune.create_experiment(name="QRTM", tags=["local"])
+		neptune.create_experiment(name="QRTM", tags=["peregrine", "QRTM"])
 
 		if TEST_VAR:
 			neptune.append_tag("test")

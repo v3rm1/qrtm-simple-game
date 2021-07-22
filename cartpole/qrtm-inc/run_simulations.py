@@ -36,7 +36,7 @@ CONFIG_TEST_SAVE_PATH = os.path.join(os.path.dirname(os.path.realpath(__file__))
 EXPT_DATA = os.path.join(os.path.dirname(os.path.realpath(__file__)), "expt_csv/expts_"+strftime("%Y%m%d_%H%M%S")+".csv")
 
 class RTMQL:
-	def __init__(self, environment, config, epsilon_decay_config="EDF", logger=None):
+	def __init__(self, environment, config, epsilon_decay_config, logger):
 		super().__init__()
 
 		# Environment config
@@ -230,7 +230,7 @@ def main():
 		np.random.seed(seed_value)
 
 
-		neptune.create_experiment(name="Incr", tags=["local"])
+		neptune.create_experiment(name="Incr", tags=["peregrine", "incr"])
 
 		if TEST_VAR:
 			neptune.append_tag("test")
@@ -261,7 +261,7 @@ def main():
 		print("Initializing custom discretizer.", file=open(STDOUT_LOG, 'a'))
 		discretizer = CustomDiscretizer()
 		print("Initializing Q-RTM Agent.", file=open(STDOUT_LOG, 'a'))
-		rtm_agent = RTMQL(env, config, epsilon_decay_function)
+		rtm_agent = RTMQL(env, config, epsilon_decay_function, STDOUT_LOG)
 		binarized_length = int(config['qrtm_params']['feature_length'])
 		binarizer = config['preproc_params']['binarizer']
 

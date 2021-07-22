@@ -21,7 +21,7 @@ neptune.init(project_qualified_name='v3rm1/CP-QRTM')
 
 # NOTE: SETTING GLOBAL SEED VALUES FOR CONSISTENT RESULTS IN EXPERIMENTAL SESSIONS
 # Set a seed value
-seed_values = [2, 131, 1729, 4027, 10069]
+seed_values = [2, 131, 1729]#, 4027, 10069]
 
 # A variable for attaching test tag to the experiment
 TEST_VAR = True
@@ -34,7 +34,7 @@ CONFIG_TEST_SAVE_PATH = os.path.join(os.path.dirname(os.path.realpath(__file__))
 EXPT_DATA = os.path.join(os.path.dirname(os.path.realpath(__file__)), "expt_csv/expts_"+strftime("%Y%m%d_%H%M%S")+".csv")
 
 class RTMQL:
-	def __init__(self, environment, config, epsilon_decay_config="EDF", logger=None):
+	def __init__(self, environment, config, epsilon_decay_config, logger):
 		super().__init__()
 
 		# Environment config
@@ -253,7 +253,7 @@ def main():
 		# 3. Set `numpy` pseudo-random generator at a fixed value
 		np.random.seed(seed_value)
 
-		neptune.create_experiment(name="PER", tags=["local"])
+		neptune.create_experiment(name="PER", tags=["peregrine", "PER"])
 
 		if TEST_VAR:
 			neptune.append_tag("test")
@@ -287,7 +287,7 @@ def main():
 		print("Initializing custom discretizer.", file=open(STDOUT_LOG, 'a'))
 		discretizer = CustomDiscretizer()
 		print("Initializing Q-RTM Agent.", file=open(STDOUT_LOG, 'a'))
-		rtm_agent = RTMQL(env, config, epsilon_decay_function)
+		rtm_agent = RTMQL(env, config, epsilon_decay_function, STDOUT_LOG)
 		binarized_length = int(config['qrtm_params']['feature_length'])
 		binarizer = config['preproc_params']['binarizer']
 

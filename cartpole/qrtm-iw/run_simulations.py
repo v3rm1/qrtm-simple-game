@@ -20,7 +20,7 @@ neptune.init(project_qualified_name='v3rm1/CP-QRTM')
 
 # NOTE: SETTING GLOBAL SEED VALUES FOR CONSISTENT RESULTS IN EXPERIMENTAL SESSIONS
 # Set a seed value
-seed_values = [2, 131, 1729, 4027, 10069]
+seed_values = [2, 131, 1729]#, 4027, 10069]
 
 # A variable for attaching test tag to the experiment
 TEST_VAR = True
@@ -32,7 +32,7 @@ CONFIG_TEST_SAVE_PATH = os.path.join(os.path.dirname(os.path.realpath(__file__))
 
 EXPT_DATA = os.path.join(os.path.dirname(os.path.realpath(__file__)), "expt_csv/expts_"+strftime("%Y%m%d_%H%M%S")+".csv")
 class RTMQL:
-	def __init__(self, environment, config, epsilon_decay_config="EDF", logger=None):
+	def __init__(self, environment, config, epsilon_decay_config, logger):
 		super().__init__()
 
 		# Environment config
@@ -256,7 +256,7 @@ def main():
 		STDOUT_LOG = os.path.join(os.path.dirname(os.path.realpath(__file__)), "logger/txt_logs/run_"+strftime("%Y%m%d_%H%M%S")+"_"+str(seed_value)+".txt")
 		BIN_DIST_FILE = os.path.join(os.path.dirname(os.path.realpath(__file__)), "logger/bin_dist/bin_dist"+strftime("%Y%m%d_%H%M%S")+"_"+str(seed_value)+".png")
 
-		neptune.create_experiment(name="IWRTM", tags=["local"])
+		neptune.create_experiment(name="IWRTM", tags=["peregrine", "IW"])
 
 		if TEST_VAR:
 			neptune.append_tag("test")
