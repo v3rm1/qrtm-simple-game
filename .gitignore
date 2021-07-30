@@ -131,4 +131,5 @@ dmypy.json
 
 # Large text files specific to this repository
 *.txt
+*.out
 !requirements.txt
