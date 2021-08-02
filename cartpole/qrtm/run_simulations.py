@@ -20,7 +20,7 @@ neptune.init(project_qualified_name='v3rm1/CP-QRTM')
 
 # NOTE: SETTING GLOBAL SEED VALUES FOR CONSISTENT RESULTS IN EXPERIMENTAL SESSIONS
 # Set a seed value
-seed_values = [2, 131, 1729, 4027, 10069]
+seed_values = [2, 131, 1729]#, 4027, 10069]
 
 # A variable for attaching test tag to the experiment
 TEST_VAR = False
