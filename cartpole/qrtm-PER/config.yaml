@@ -31,7 +31,7 @@ qrtm_params:
   # number_of_clauses = 2 * T ALWAYS
   number_of_clauses: 2000
   T: 1000
-  s: 5
+  s: 20
   incremental: True
   weighted_clauses: False
   # Set as multiple of number_of_features
