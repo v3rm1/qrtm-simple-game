@@ -13,7 +13,10 @@ from tensorflow import keras
 
 import csv
 from time import strftime
+import neptune
 
+
+neptune.init(project_qualified_name='v3rm1/MC-QRTM')
 
 
 # Reward decay
@@ -109,6 +112,7 @@ def main():
     """ """
     env = gym.make("MountainCar-v0")
     score_log = ScoreLogger("MountainCar-v0")
+    neptune.create_experiment(name="MLP", tags=["peregrine"])
 
     dqn_agent = DQNAgent(env)
     for ep in range(EPISODES):
@@ -135,11 +139,15 @@ def main():
             else:
                 print("Episode: {0}\nEpsilon: {1}\tScore: {2}".format(
                     ep, dqn_agent.epsilon, episode_reward), file=open(STDOUT_LOG, 'a'))
+                score_log.add_score(episode_reward, ep)
                 # reward engineering for other steps: reward = distance travelled + velocity
                 print("Reward: {}".format(reward), file=open(STDOUT_LOG, 'a'))
             dqn_agent.memorize(state, action, reward, next_state, done)
         dqn_agent.experience_replay()
-        score_log.add_score(episode_reward, ep)
+        
+        neptune.log_metric('steps', episode_len)
+        neptune.log_metric('accum_reward', episode_reward)
+        neptune.log_metric('manip_reward', reward)
 
 
 if __name__ == "__main__":
