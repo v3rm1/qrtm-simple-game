@@ -253,7 +253,7 @@ def store_config_tested(config_data, win_count, run_date, tested_configs_file_pa
 	return
 
 def main():
-	neptune.create_experiment(name="RTM", tags=["local"])
+	neptune.create_experiment(name="RTM", tags=["peregrine"])
 
 	if TEST_VAR:
 		neptune.append_tag("test")
@@ -333,13 +333,26 @@ def main():
 			state = next_state
 
 			# Game end condition
-			if done:
+			if done and step < 200:
 				# Increment win counter conditionally
-				if reward == 0:
-					win_ctr += 1
+				win_ctr += 1
+				reward = 1
+				tot_reward = reward
+				print("Episode: {0}\nEpsilon: {1}\tScore: {2}".format(curr_ep, rtm_agent.epsilon, step), file=open(STDOUT_LOG, 'a'))				
 
-				print("Episode: {0}\nEpsilon: {1}\tScore: {2}".format(curr_ep, rtm_agent.epsilon, step), file=open(STDOUT_LOG, 'a'))
 				score_log.add_score(step,
+					curr_ep,
+					gamma,
+					epsilon_decay_function,
+					consecutive_runs=episodes,
+					sedf_alpha=config['learning_params']['SEDF']['tail'],
+					sedf_beta=config['learning_params']['SEDF']['slope'],
+					sedf_delta=config['learning_params']['SEDF']['tail_gradient'],
+					edf_epsilon_decay=config['learning_params']['EDF']['epsilon_decay'])
+
+				break
+		
+		score_log.add_score(step,
 				curr_ep,
 				gamma,
 				epsilon_decay_function,
@@ -348,8 +361,7 @@ def main():
 				sedf_beta=config['learning_params']['SEDF']['slope'],
 				sedf_delta=config['learning_params']['SEDF']['tail_gradient'],
 				edf_epsilon_decay=config['learning_params']['EDF']['epsilon_decay'])
-				neptune.log_metric('score', tot_reward)
-				break
+		neptune.log_metric('steps', step)
 		# if step < 195:	
 		# 	# Store TD error from experience replay
 		rms_td_err_ep = rtm_agent.experience_replay(curr_ep)
@@ -359,6 +371,7 @@ def main():
 		# Append average TD error per episode to list
 		td_error.append(rms_td_err_ep)
 		neptune.log_metric('TD_ERR (RMS)', rms_td_err_ep)
+		neptune.log_metric('reward', tot_reward)
 		
 	print("Len of TDERR array: {}".format(len(td_error)), file=open(STDOUT_LOG, 'a'))
 
@@ -368,16 +381,14 @@ def main():
 						  T=config["qrtm_params"]["T"],
 						  feature_length=feature_length)
 	
-	
 	# Print win counter
 	print("win_ctr: {}".format(win_ctr), file=open(STDOUT_LOG, 'a'))
 
 	# Store configuration tested, win count and timestamp of experiment
 	store_config_tested(config, win_ctr, run_dt)
-
-	# neptune.log_artifact(STDOUT_LOG)
-	neptune.log_artifact(CONFIG_PATH)
+	
 	discretizer.plot_bin_dist(plot_file=BIN_DIST_FILE, binarizer=binarizer)
+	neptune.log_artifact(CONFIG_PATH)
 	
 
 

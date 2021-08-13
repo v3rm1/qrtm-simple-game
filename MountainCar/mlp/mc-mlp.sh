@@ -2,7 +2,7 @@
 #SBATCH --time=10:00:00
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
-#SBATCH --job-name=PER_qrtm_cartpole
+#SBATCH --job-name=mlp_MC
 #SBATCH --mem=5000
 module restore thesis_mods
 

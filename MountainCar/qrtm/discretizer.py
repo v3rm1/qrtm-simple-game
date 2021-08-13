@@ -125,7 +125,7 @@ class CustomDiscretizer:
 
     def plot_bin_dist(self, plot_file, binarizer):
 
-        fig, axs = plt.subplots(2, 1)
+        fig, axs = plt.subplots(1, 2)
         df = pd.DataFrame(columns=['car_position', 'car_velocity'])
     
         for i in range(0, len(self.bin_labels), 4):

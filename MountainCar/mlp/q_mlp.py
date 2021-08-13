@@ -31,10 +31,10 @@ BATCH_SIZE = 64
 # Exploration-Exploitation Parameters
 EPSILON_MIN = 0.01
 EPSILON_MAX = 1
-EPSILON_DECAY = 0.9
+EPSILON_DECAY = 0.99
 
 # Number Of Episodes to run
-EPISODES = 10000
+EPISODES = 5000
 
 STDOUT_LOG = os.path.join(os.path.dirname(os.path.realpath(__file__)), "run_"+strftime("%Y%m%d_%H%M%S")+".txt")
 
@@ -89,7 +89,7 @@ class DQNAgent:
         q_values = self.q_net.predict(state)
         return np.argmax(q_values[0])
 
-    def experience_replay(self):
+    def experience_replay(self, episode):
         """ """
         if len(self.memory) < BATCH_SIZE:
             return
@@ -104,7 +104,7 @@ class DQNAgent:
             q_values[0][action] = q_update
             # tensorboard_callback = tf.keras.callbacks.TensorBoard(log_dir="./logs", histogram_freq=0, write_graph=True, write_images=True)
             self.q_net.fit(state, q_values, verbose=0)
-        self.epsilon *= EPSILON_DECAY
+        self.epsilon = EPSILON_MAX * pow(EPSILON_DECAY, episode)
         self.epsilon = max(EPSILON_MIN, self.epsilon)
 
 
@@ -135,15 +135,15 @@ def main():
                 reward = 100
                 print("Episode: {0}\nEpsilon: {1}\tScore: {2}".format(
                     ep, dqn_agent.epsilon, reward), file=open(STDOUT_LOG, 'a'))
-                score_log.add_score(episode_reward, ep)
-            else:
+                score_log.add_score(episode_len, ep)
+            elif done:
                 print("Episode: {0}\nEpsilon: {1}\tScore: {2}".format(
                     ep, dqn_agent.epsilon, episode_reward), file=open(STDOUT_LOG, 'a'))
-                score_log.add_score(episode_reward, ep)
+                score_log.add_score(episode_len, ep)
                 # reward engineering for other steps: reward = distance travelled + velocity
                 print("Reward: {}".format(reward), file=open(STDOUT_LOG, 'a'))
             dqn_agent.memorize(state, action, reward, next_state, done)
-        dqn_agent.experience_replay()
+        dqn_agent.experience_replay(ep)
         
         neptune.log_metric('steps', episode_len)
         neptune.log_metric('accum_reward', episode_reward)

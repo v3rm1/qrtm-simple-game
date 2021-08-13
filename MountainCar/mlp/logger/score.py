@@ -6,7 +6,7 @@ import os
 import csv
 from time import strftime
 
-AVG_SCORE = 195
+AVG_SCORE = 200
 CONSECUTIVE_RUNS = 500
 
 SCORES_DIR = os.path.join(os.path.dirname(os.path.realpath(__file__)), "scores/")
@@ -34,7 +34,7 @@ class ScoreLogger:
         self._save_png(input_scores=SCORE_CSV,
                        output_img=SCORE_PNG,
                        x_label="Episode",
-                       y_label="Reward",
+                       y_label="Steps Taken",
                        avg_of_last=CONSECUTIVE_RUNS,
                        show_goal=True,
                        show_trend=True,
@@ -97,7 +97,7 @@ class ScoreLogger:
                 y.append(float(data[i][0]))
 
         plt.subplots()
-        plt.plot(x, y, label="Reward VS Episode")
+        plt.plot(x, y, label="Steps Taken VS Episode")
         avg_range = avg_of_last if avg_of_last is not None else len(x)
         plt.plot(x[-avg_range:],
                  [np.mean(y[-avg_range:])] * len(y[-avg_range:]),
@@ -106,7 +106,7 @@ class ScoreLogger:
         if show_goal:
             plt.plot(x, [AVG_SCORE] * len(x),
                      linestyle=":",
-                     label="Goal: " + str(AVG_SCORE))
+                     label="Limit: " + str(AVG_SCORE))
         if show_trend and len(x) > 1:
             trend_x = x[1:]
             curve_fn = np.poly1d(
