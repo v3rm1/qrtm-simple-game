@@ -1,8 +1,8 @@
 #!/bin/bash
-#SBATCH --time=20:00:00
+#SBATCH --time=10:00:00
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
-#SBATCH --job-name=PER_qrtm_cartpole
-#SBATCH --mem=2000
+#SBATCH --job-name=MC_PER_QRTM
+#SBATCH --mem=20000
 module restore thesis_mods
-python3 ~/../../data/s3893030/qrtm-simple-game/mountaincar/qrtm-PER/mc-per.sh
+python3 ./run_simulations.py

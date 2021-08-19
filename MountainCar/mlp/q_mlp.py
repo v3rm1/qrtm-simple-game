@@ -34,7 +34,7 @@ EPSILON_MAX = 1
 EPSILON_DECAY = 0.99
 
 # Number Of Episodes to run
-EPISODES = 5000
+EPISODES = 3000
 
 STDOUT_LOG = os.path.join(os.path.dirname(os.path.realpath(__file__)), "run_"+strftime("%Y%m%d_%H%M%S")+".txt")
 
@@ -118,27 +118,30 @@ def main():
     for ep in range(EPISODES):
         state = env.reset()
         state = np.reshape(state, [1, env.observation_space.shape[0]])
-        episode_reward = 0
+
+        accum_reward = 0
         episode_len = 0
         done = False
         while not done:
             episode_len += 1
             action = dqn_agent.act(state)
             next_state, reward, done, info = env.step(action)
-            episode_reward += reward
+
             next_state = np.reshape(next_state,
                                     [1, env.observation_space.shape[0]])
-            
+            accum_reward += reward
             state = next_state
             if done and episode_len < 200:
                 # Reward egineering: if goal is reached in less than 200 steps, reward = episode reward + 250
                 reward = 100
+                accum_reward += reward
                 print("Episode: {0}\nEpsilon: {1}\tScore: {2}".format(
-                    ep, dqn_agent.epsilon, reward), file=open(STDOUT_LOG, 'a'))
+                    ep, dqn_agent.epsilon, accum_reward), file=open(STDOUT_LOG, 'a'))
                 score_log.add_score(episode_len, ep)
             elif done:
+                accum_reward += reward
                 print("Episode: {0}\nEpsilon: {1}\tScore: {2}".format(
-                    ep, dqn_agent.epsilon, episode_reward), file=open(STDOUT_LOG, 'a'))
+                    ep, dqn_agent.epsilon, accum_reward), file=open(STDOUT_LOG, 'a'))
                 score_log.add_score(episode_len, ep)
                 # reward engineering for other steps: reward = distance travelled + velocity
                 print("Reward: {}".format(reward), file=open(STDOUT_LOG, 'a'))
@@ -146,8 +149,7 @@ def main():
         dqn_agent.experience_replay(ep)
         
         neptune.log_metric('steps', episode_len)
-        neptune.log_metric('accum_reward', episode_reward)
-        neptune.log_metric('manip_reward', reward)
+        neptune.log_metric('accum_reward', accum_reward)
 
 
 if __name__ == "__main__":

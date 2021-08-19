@@ -7,7 +7,7 @@ import csv
 from time import strftime
 
 AVG_SCORE = 200
-CONSECUTIVE_RUNS = 500
+CONSECUTIVE_RUNS = 3000
 
 SCORES_DIR = os.path.join(os.path.dirname(os.path.realpath(__file__)), "scores/")
 SCORE_CSV = os.path.join(SCORES_DIR,

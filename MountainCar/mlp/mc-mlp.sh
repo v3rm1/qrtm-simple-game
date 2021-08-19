@@ -6,6 +6,4 @@
 #SBATCH --mem=5000
 module restore thesis_mods
 
-rm -rf *.out
-
 python3 ./q_mlp.py

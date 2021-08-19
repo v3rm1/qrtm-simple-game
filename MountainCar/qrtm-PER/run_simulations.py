@@ -48,7 +48,7 @@ class RTMQL:
 
 		# Environment config
 		self.obs_space = environment.observation_space.shape[0]
-		self.action_space = environment.action_space.n
+		self.action_space = config['game_params']['action_space']
 
 		self.memory = Memory(config['memory_params']['memory_size'])
 		self.replay_batch = config['memory_params']['batch_size']
@@ -100,18 +100,19 @@ class RTMQL:
 		return max(min(self.epsilon_max, self.epsilon), self.epsilon_min)
 
 	def memorize(self, state, action, reward, next_state, done):
+		act_idx = self.action_space.index(action)
 		q_vals = [self.agent_1.predict(state), self.agent_2.predict(state)]
 		target_q = [self.agent_1.predict(next_state), self.agent_2.predict(next_state)]
 
-		q_action = q_vals[action]
+		q_action = q_vals[act_idx]
 
 		if done:
 			q_update = reward
 		else:
-			q_update = self.learning_rate * (reward + self.gamma * target_q[action]-q_vals[action])
-		q_vals[action] += q_update
+			q_update = self.learning_rate * (reward + self.gamma * target_q[act_idx]-q_vals[act_idx])
+		q_vals[act_idx] += q_update
 
-		error = abs(q_action - target_q[action])
+		error = abs(q_action - target_q[act_idx])
 		self.memory.add_sample_to_tree(error, (state, action, reward, next_state, done))
 		return error
 
@@ -130,11 +131,11 @@ class RTMQL:
 	def act(self, state):
 		if np.random.rand() <= self.epsilon:
 			print("RANDOM ACTION")
-			a = random.randrange(self.action_space)
+			a = random.choice(self.action_space)
 			return a
 		print("LEARNER ACTION")
 		q_values = [self.agent_1.predict(state), self.agent_2.predict(state)]
-		return np.argmax(q_values)
+		return self.action_space[np.argmax(q_values)]
 	
 	def experience_replay(self, episode):
 		td_err_list = []
@@ -149,20 +150,21 @@ class RTMQL:
 		done_list = list(batch[4])
 
 		for idx, state, action, reward, next_state, done in zip(idxs, states, actions, rewards, next_states, done_list):
+			act_idx = self.action_space.index(action)
 			q_values = [self.agent_1.predict(state), self.agent_2.predict(state)]
 			target_q = [self.agent_1.predict(next_state), self.agent_2.predict(next_state)]
-			td_error = reward + self.gamma * np.amax(target_q) - q_values[action]
+			td_error = reward + self.gamma * np.amax(target_q) - q_values[act_idx]
 
 			if done:
 				q_update = reward
 			else:
 				q_update = self.learning_rate * td_error
 			
-			q_values[action] += q_update
+			q_values[act_idx] += q_update
 
-			target = reward * (1 - done) * self.gamma * target_q[action]
+			target = reward * (1 - done) * self.gamma * target_q[act_idx]
 
-			error = abs(q_values[action] - target)
+			error = abs(q_values[act_idx] - target)
 
 			self.memory.update_tree(idx, error)
 
@@ -296,6 +298,7 @@ def main():
 		# Initialize episode variables
 		step = 0
 		done = False
+		tot_reward = 0
 
 		# Reset state to start
 		state = env.reset()
@@ -311,7 +314,7 @@ def main():
 			print("State: {0}".format(state))
 			# Run simulation step in environment, retrieve next state, reward and game status
 			next_state, reward, done, info = env.step(action)
-			reward = reward if not done else -reward
+			tot_reward += reward 
 			# Discretize and reshape next_state
 			next_state = discretizer.cartpole_binarizer(input_state=next_state, n_bins=binarized_length, bin_type=binarizer)
 			next_state = np.reshape(next_state, [1, feature_length * env.observation_space.shape[0]])[0]
@@ -323,24 +326,35 @@ def main():
 			state = next_state
 
 			# Game end condition
-			if done:
+			if done and step < 200:
 				# Increment win counter conditionally
-				if step > 195:
-					win_ctr += 1
+				win_ctr += 1
+				reward = 100
+				tot_reward = reward
+				print("Episode: {0}\nEpsilon: {1}\tScore: {2}".format(curr_ep, rtm_agent.epsilon, step), file=open(STDOUT_LOG, 'a'))				
 
-				print("Episode: {0}\nEpsilon: {1}\tScore: {2}".format(curr_ep, rtm_agent.epsilon, step))
 				score_log.add_score(step,
-				curr_ep,
-				gamma,
-				epsilon_decay_function,
-				consecutive_runs=episodes,
-				sedf_alpha=config['learning_params']['SEDF']['tail'],
-				sedf_beta=config['learning_params']['SEDF']['slope'],
-				sedf_delta=config['learning_params']['SEDF']['tail_gradient'],
-				edf_epsilon_decay=config['learning_params']['EDF']['epsilon_decay'])
-				neptune.log_metric('score', step)
+					curr_ep,
+					gamma,
+					epsilon_decay_function,
+					consecutive_runs=episodes,
+					sedf_alpha=config['learning_params']['SEDF']['tail'],
+					sedf_beta=config['learning_params']['SEDF']['slope'],
+					sedf_delta=config['learning_params']['SEDF']['tail_gradient'],
+					edf_epsilon_decay=config['learning_params']['EDF']['epsilon_decay'])
+
 				break
-		# if step < 195:	
+			elif done:
+				score_log.add_score(step,
+					curr_ep,
+					gamma,
+					epsilon_decay_function,
+					consecutive_runs=episodes,
+					sedf_alpha=config['learning_params']['SEDF']['tail'],
+					sedf_beta=config['learning_params']['SEDF']['slope'],
+					sedf_delta=config['learning_params']['SEDF']['tail_gradient'],
+					edf_epsilon_decay=config['learning_params']['EDF']['epsilon_decay'])
+		neptune.log_metric('steps', step)	
 		# 	# Store TD error from experience replay
 		rms_td_err_ep, qmax_init = rtm_agent.experience_replay(curr_ep)
 		# else:
@@ -369,10 +383,11 @@ def main():
 	neptune.log_artifact(CONFIG_PATH)
 	
 	discretizer.plot_bin_dist(plot_file=BIN_DIST_FILE, binarizer=binarizer)
+	print("Bin distribution plot saved at: {}".format(BIN_DIST_FILE))
+
 	
 
 
 if __name__ == "__main__":
-	sys.stdout = open(STDOUT_LOG, 'w')
 	main()
-	sys.stdout.close()
+

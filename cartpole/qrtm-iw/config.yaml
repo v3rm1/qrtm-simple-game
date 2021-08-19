@@ -1,7 +1,7 @@
 # YAML Config file for RTM-QL agent
 
 learning_params:
-  gamma: 1
+  gamma: 0.99
   learning_rate: 1
   EDF:
     epsilon_min: 0.01
