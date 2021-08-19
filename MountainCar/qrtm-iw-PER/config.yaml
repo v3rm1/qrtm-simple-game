@@ -1,9 +1,9 @@
 # YAML Config file for RTM-QL agent
 
 learning_params:
-  gamma: 1
-  learning_rate: 1
-  lambda: 0.5
+  gamma: 0.99
+  learning_rate: 0.9
+  lambda: 0.9
   EDF:
     epsilon_min: 0.01
     epsilon_max: 1
@@ -21,14 +21,14 @@ memory_params:
 game_params:
   episodes: 300
   reward: 1
-  max_score: 200
-  min_score: -1
-  action_space: 2
+  max_score: 100
+  min_score: -100
+  action_space: [0, 2]
 
 qrtm_params:
   # number_of_features = num_inputs [in this case, 4] * feature_length ALWAYS
   number_of_features: 16
-  feature_length: 4
+  feature_length: 8
   # number_of_clauses = 2 * T ALWAYS
   number_of_clauses: 500
   T: 1

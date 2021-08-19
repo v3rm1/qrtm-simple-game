@@ -347,11 +347,11 @@ def main():
 					neptune.log_metric('score', step)
 					scores.append(step)
 					break
-			# if step < 195:	
+
 			# 	# Store TD error from experience replay
 			rms_td_err_ep, qmax_init = rtm_agent.experience_replay(curr_ep, logger=STDOUT_LOG)
-			# else:
-			# 	rms_td_err_ep = 0
+
+
 			print("episode td err RMS: {}".format(rms_td_err_ep), file=open(STDOUT_LOG, 'a'))
 			# Append average TD error per episode to list
 			td_error.append(rms_td_err_ep)

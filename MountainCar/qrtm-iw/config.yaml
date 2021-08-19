@@ -2,7 +2,7 @@
 
 learning_params:
   gamma: 0.99
-  learning_rate: 0.5
+  learning_rate: 0.9
   EDF:
     epsilon_min: 0.01
     epsilon_max: 0.5
@@ -29,7 +29,7 @@ qrtm_params:
   number_of_features: 16
   feature_length: 8
   # number_of_clauses = 2 * T ALWAYS
-  number_of_clauses: 20
+  number_of_clauses: 200
   T: 1
   s: 5
   incremental: True
