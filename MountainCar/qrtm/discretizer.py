@@ -3,6 +3,9 @@ import gym
 import os
 import pandas as pd
 import matplotlib.pyplot as plt
+from time import strftime
+
+BIN_DIST_FILE = os.path.join(os.path.dirname(os.path.realpath(__file__)), "logger/bin_dist/bin_dist"+strftime("%Y%m%d_%H%M%S")+".png")
 
 class CustomDiscretizer:
     def __init__(self):
@@ -132,10 +135,10 @@ class CustomDiscretizer:
             df = df.append({'car_position': self.bin_labels[i], 
             'car_velocity': self.bin_labels[i+1]}, ignore_index=True)
 
-        df['car_position'].value_counts().sort_index(ascending=True).plot(kind="bar", ax=axs[0][0])
-        axs[0, 0].set_title('car_position')
-        df['car_velocity'].value_counts().sort_index(ascending=True).plot(kind="bar", ax=axs[1][0])
-        axs[1, 0].set_title('car_velocity')
+        df['car_position'].value_counts().sort_index(ascending=True).plot(kind="bar", ax=axs[0])
+        axs[0].set_title('car_position')
+        df['car_velocity'].value_counts().sort_index(ascending=True).plot(kind="bar", ax=axs[1])
+        axs[1].set_title('car_velocity')
        
 
         for ax in axs.flat:
@@ -150,10 +153,11 @@ def test():
     state = env.reset()
     print("Original State: {}".format(state))
     disc = CustomDiscretizer()
-    disc_state = disc.cartpole_binarizer(state, n_bins=4, bin_type="L")
+    disc_state = disc.cartpole_binarizer(state, n_bins=8, bin_type="U")
     print("Discretized State: {}".format(disc_state))
     print(disc.bin_labels)
     print("END")
+    disc.plot_bin_dist(BIN_DIST_FILE, "U")
 
 
 if __name__ == "__main__":

@@ -3,6 +3,9 @@ import gym
 import os
 import pandas as pd
 import matplotlib.pyplot as plt
+from time import strftime
+
+BIN_DIST_FILE = os.path.join(os.path.dirname(os.path.realpath(__file__)), "logger/bin_dist/bin_dist"+strftime("%Y%m%d_%H%M%S")+".png")
 
 class CustomDiscretizer:
     def __init__(self):
@@ -26,6 +29,9 @@ class CustomDiscretizer:
         return binary_rep
 
     def _unsigned_binarizer(self, fp_num, range_min, range_max, n_bins=16):
+        fp_num = fp_num if fp_num >= range_min else range_min
+        fp_num = fp_num if fp_num <= range_max else range_max
+        
         binary_rep = np.zeros(shape=n_bins, dtype=int)
         bin_delta = (np.absolute(range_max) + np.absolute(range_min))/n_bins
         for i in range(0, n_bins):
@@ -51,8 +57,8 @@ class CustomDiscretizer:
         return binary_rep
 
     def _less_than_binned_binarizer(self, fp_num, range_min, range_max, n_bins=16):
-        if fp_num > range_max:
-            fp_num = range_max
+        fp_num = fp_num if fp_num >= range_min else range_min
+        fp_num = fp_num if fp_num <= range_max else range_max
             
         binary_rep = np.zeros(shape=n_bins, dtype=int)
         bin_delta = (np.absolute(range_max) + np.absolute(range_min))/n_bins
@@ -94,63 +100,46 @@ class CustomDiscretizer:
     def cartpole_binarizer(self, input_state, n_bins=15, bin_type="S"):
         if bin_type == "B":
             # binned binarizer
-            op_1 = self._binned_binarizer(input_state[0], 0, 3, n_bins-1)
-            op_2 = self._binned_binarizer(input_state[1], 0, 500, n_bins-1)
-            op_3 = self._binned_binarizer(input_state[2], 0, 42, n_bins-1)
-            op_4 = self._binned_binarizer(input_state[3], 0, 500, n_bins-1)
+            op_1 = self._binned_binarizer(input_state[0], 0, 1.2, n_bins-1)
+            op_2 = self._binned_binarizer(input_state[1], 0, 0.07, n_bins-1)
         elif bin_type == "G":
             # greater_than binarizer:
             op_1 = self._greater_than_binarizer(input_state[0], n_places=n_bins-1)
             op_2 = self._greater_than_binarizer(input_state[1], n_places=n_bins-1)
-            op_3 = self._greater_than_binarizer(input_state[2], n_places=n_bins-1)
-            op_4 = self._greater_than_binarizer(input_state[3], n_places=n_bins-1)
         elif bin_type == "Q":
             # quartile binarizer
-            op_1 = self._quartile_binner(input_state[0], 3)
-            op_2 = self._quartile_binner(input_state[1], 500)
-            op_3 = self._quartile_binner(input_state[2], 42)
-            op_4 = self._quartile_binner(input_state[3], 500)
+            op_1 = self._quartile_binner(input_state[0], 1.2)
+            op_2 = self._quartile_binner(input_state[1], 0.07)
         elif bin_type == "U":
             # unsigned binarizer
-            op_1 = self._unsigned_binarizer(input_state[0], -3, 3, n_bins)
-            op_2 = self._unsigned_binarizer(input_state[1], -500, 500, n_bins)
-            op_3 = self._unsigned_binarizer(input_state[2], -42, 42, n_bins)
-            op_4 = self._unsigned_binarizer(input_state[3], -500, 500, n_bins)
+            op_1 = self._unsigned_binarizer(input_state[0], -1.2, 0.6, n_bins)
+            op_2 = self._unsigned_binarizer(input_state[1], -0.07, 0.07, n_bins)
 
         elif bin_type == "L":
             # lesser than binned binarizer
             # based on arXiv:1905.04199v2 [cs.LG]
-            op_1 = self._less_than_binned_binarizer(input_state[0], -1.5, 1.5, n_bins)
-            op_2 = self._less_than_binned_binarizer(input_state[1], -100, 100, n_bins)
-            op_3 = self._less_than_binned_binarizer(input_state[2], -15, 15, n_bins)
-            op_4 = self._less_than_binned_binarizer(input_state[3], -100, 100, n_bins)
+            op_1 = self._less_than_binned_binarizer(input_state[0], -1.2, 0.6, n_bins)
+            op_2 = self._less_than_binned_binarizer(input_state[1], -0.07, 0.07, n_bins)
 
         else:
             op_1 = self._simple_binarizer(input_state[0], bits=n_bins-1)
             op_2 = self._simple_binarizer(input_state[1], bits=n_bins-1)
-            op_3 = self._simple_binarizer(input_state[2], bits=n_bins-1)
-            op_4 = self._simple_binarizer(input_state[3], bits=n_bins-1)
-        return [op_1, op_2, op_3, op_4]
+        return [op_1, op_2]
 
     def plot_bin_dist(self, plot_file, binarizer):
 
-        fig, axs = plt.subplots(2, 2)
-        df = pd.DataFrame(columns=['cart_position', 'cart_velocity', 'pole_angle', 'pole_velocity'])
+        fig, axs = plt.subplots(1, 2)
+        df = pd.DataFrame(columns=['car_position', 'car_velocity'])
     
         for i in range(0, len(self.bin_labels), 4):
-            df = df.append({'cart_position': self.bin_labels[i], 
-            'cart_velocity': self.bin_labels[i+1], 
-            'pole_angle':self.bin_labels[i+2], 
-            'pole_velocity':self.bin_labels[i+3]}, ignore_index=True)
+            df = df.append({'car_position': self.bin_labels[i], 
+            'car_velocity': self.bin_labels[i+1]}, ignore_index=True)
 
-        df['cart_position'].value_counts().sort_index(ascending=True).plot(kind="bar", ax=axs[0][0])
-        axs[0, 0].set_title('cart_position')
-        df['cart_velocity'].value_counts().sort_index(ascending=True).plot(kind="bar", ax=axs[0][1])
-        axs[0, 1].set_title('cart_velocity')
-        df['pole_angle'].value_counts().sort_index(ascending=True).plot(kind="bar", ax=axs[1][0])
-        axs[1, 0].set_title('pole_angle')
-        df['pole_velocity'].value_counts().sort_index(ascending=True).plot(kind="bar", ax=axs[1][1])
-        axs[1, 1].set_title('pole_velocity')
+        df['car_position'].value_counts().sort_index(ascending=True).plot(kind="bar", ax=axs[0])
+        axs[0].set_title('car_position')
+        df['car_velocity'].value_counts().sort_index(ascending=True).plot(kind="bar", ax=axs[1])
+        axs[1].set_title('car_velocity')
+       
 
         for ax in axs.flat:
             ax.set(xlabel='bin', ylabel='frequency')
@@ -160,14 +149,15 @@ class CustomDiscretizer:
         plt.savefig(plot_file)
 
 def test():
-    env = gym.make("CartPole-v0")
+    env = gym.make("MountainCar-v0")
     state = env.reset()
     print("Original State: {}".format(state))
     disc = CustomDiscretizer()
-    disc_state = disc.cartpole_binarizer(state, n_bins=4, bin_type="L")
+    disc_state = disc.cartpole_binarizer(state, n_bins=8, bin_type="U")
     print("Discretized State: {}".format(disc_state))
     print(disc.bin_labels)
     print("END")
+    disc.plot_bin_dist(BIN_DIST_FILE, "U")
 
 
 if __name__ == "__main__":

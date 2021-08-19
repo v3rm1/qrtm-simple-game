@@ -250,7 +250,7 @@ def store_config_tested(config_data, win_count, run_date, tested_configs_file_pa
 	return
 
 def main():
-	neptune.create_experiment(name="RTM-PER", tags=["local"])
+	neptune.create_experiment(name="RTM-PER", tags=["PER"])
 
 	if TEST_VAR:
 		neptune.append_tag("test")
@@ -363,7 +363,7 @@ def main():
 		# Append average TD error per episode to list
 		td_error.append(rms_td_err_ep)
 		neptune.log_metric('TD_ERR (RMS)', rms_td_err_ep)
-		neptune.log_metric('Max Init Q', qmax_init)
+		neptune.log_metric('reward', tot_reward)
 		
 	print("Len of TDERR array: {}".format(len(td_error)))
 

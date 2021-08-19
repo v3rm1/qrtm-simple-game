@@ -46,7 +46,7 @@ class RTMQL:
 
 		# Environment config
 		self.obs_space = environment.observation_space.shape[0]
-		self.action_space = environment.action_space.n
+		self.action_space = config['game_params']['action_space']
 
 		self.memory = deque(maxlen=config['memory_params']['memory_size'])
 		self.replay_batch = config['memory_params']['batch_size']
@@ -115,11 +115,11 @@ class RTMQL:
 	def act(self, state):
 		if np.random.rand() <= self.epsilon:
 			print("RANDOM ACTION")
-			a = random.randrange(self.action_space)
+			a = random.choice(self.action_space)
 			return a
 		print("LEARNER ACTION")
 		q_values = [self.agent_1.predict(state), self.agent_2.predict(state)]
-		return np.argmax(q_values)
+		return self.action_space[np.argmax(q_values)]
 	
 	def experience_replay(self, episode):
 		td_err_list = []
@@ -130,6 +130,7 @@ class RTMQL:
 		batch = random.sample(self.memory, self.replay_batch)
 
 		for state, action, reward, next_state, done in batch:
+			act_idx = self.action_space.index(action)
 			q_update = 0
 			# Compute q-values for state
 			q_values = [self.agent_1.predict(state), self.agent_2.predict(state)]
@@ -137,14 +138,9 @@ class RTMQL:
 			# Compute extected q-values for next state
 			target_q = [self.agent_1.predict(next_state), self.agent_2.predict(next_state)]
 
-			print("PRE FIT")
-			print("State: {}".format(state))
-			print("Q_Values - State: {}".format(q_values))
-			print("Next State: {}".format(next_state))
-			print("Expectation - Next State: {}".format(target_q))
-
+			
 			# Compute temporal difference error
-			td_error = reward + self.gamma * np.amax(target_q) - q_values[action]
+			td_error = reward + self.gamma * np.amax(target_q) - q_values[act_idx]
 
 			if done:
 				# If game is done, the update equals reward
@@ -154,25 +150,13 @@ class RTMQL:
 				q_update += self.learning_rate * td_error
 			
 			# Add update to q_value of action taken for state
-			q_values[action] += q_update
+			q_values[act_idx] += q_update
 
 			# Update agents on new q-values for the state
-			print("AGENT 1")
-
 			self.agent_1.update(state, q_values[0])
-			print("AGENT 2")
-
 			self.agent_2.update(state, q_values[1])
 
-			td_err_post_fit = reward + self.gamma * np.amax([self.agent_1.predict(next_state), self.agent_2.predict(next_state)]) - q_values[action]
-
-			print("TD_ERROR Pre fit: {}\nTD_ERROR Post fit: {}".format(td_error, td_err_post_fit))
-			print("POST FIT")
-			print("State: {}".format(state))
-			print("Q_Values - State: {}".format([self.agent_1.predict(state), self.agent_2.predict(state)]))
-			print("Next State: {}".format(next_state))
-			print("Expectation - Next State: {}".format([self.agent_1.predict(next_state), self.agent_2.predict(next_state)]))
-
+			td_err_post_fit = reward + self.gamma * np.amax([self.agent_1.predict(next_state), self.agent_2.predict(next_state)]) - q_values[act_idx]
 			td_err_list.append(pow(td_error, 2))
 			
 		
@@ -251,7 +235,7 @@ def store_config_tested(config_data, win_count, run_date, tested_configs_file_pa
 	return
 
 def main():
-	neptune.create_experiment(name="RTM-IW", tags=["local"])
+	neptune.create_experiment(name="RTM-IW", tags=["peregrine", "IW"])
 
 	if TEST_VAR:
 		neptune.append_tag("test")
@@ -299,7 +283,7 @@ def main():
 		# Initialize episode variables
 		step = 0
 		done = False
-
+		tot_reward = 0
 		# Reset state to start
 		state = env.reset()
 		# Discretize and reshape state
@@ -314,7 +298,7 @@ def main():
 			print("State: {0}".format(state))
 			# Run simulation step in environment, retrieve next state, reward and game status
 			next_state, reward, done, info = env.step(action)
-			reward = reward if not done else -reward
+			tot_reward += reward
 			# Discretize and reshape next_state
 			next_state = discretizer.cartpole_binarizer(input_state=next_state, n_bins=binarized_length, bin_type=binarizer)
 			next_state = np.reshape(next_state, [1, feature_length * env.observation_space.shape[0]])[0]
@@ -326,24 +310,35 @@ def main():
 			state = next_state
 
 			# Game end condition
-			if done:
+			if done and step < 200:
 				# Increment win counter conditionally
-				if step > 195:
-					win_ctr += 1
+				win_ctr += 1
+				reward = 100
+				tot_reward = reward
+				print("Episode: {0}\nEpsilon: {1}\tScore: {2}".format(curr_ep, rtm_agent.epsilon, step), file=open(STDOUT_LOG, 'a'))				
 
-				print("Episode: {0}\nEpsilon: {1}\tScore: {2}".format(curr_ep, rtm_agent.epsilon, step))
 				score_log.add_score(step,
-				curr_ep,
-				gamma,
-				epsilon_decay_function,
-				consecutive_runs=episodes,
-				sedf_alpha=config['learning_params']['SEDF']['tail'],
-				sedf_beta=config['learning_params']['SEDF']['slope'],
-				sedf_delta=config['learning_params']['SEDF']['tail_gradient'],
-				edf_epsilon_decay=config['learning_params']['EDF']['epsilon_decay'])
-				neptune.log_metric('score', step)
+					curr_ep,
+					gamma,
+					epsilon_decay_function,
+					consecutive_runs=episodes,
+					sedf_alpha=config['learning_params']['SEDF']['tail'],
+					sedf_beta=config['learning_params']['SEDF']['slope'],
+					sedf_delta=config['learning_params']['SEDF']['tail_gradient'],
+					edf_epsilon_decay=config['learning_params']['EDF']['epsilon_decay'])
+
 				break
-		# if step < 195:	
+			elif done:
+				score_log.add_score(step,
+					curr_ep,
+					gamma,
+					epsilon_decay_function,
+					consecutive_runs=episodes,
+					sedf_alpha=config['learning_params']['SEDF']['tail'],
+					sedf_beta=config['learning_params']['SEDF']['slope'],
+					sedf_delta=config['learning_params']['SEDF']['tail_gradient'],
+					edf_epsilon_decay=config['learning_params']['EDF']['epsilon_decay'])
+		neptune.log_metric('steps', step)
 		# 	# Store TD error from experience replay
 		
 		rms_td_err_ep, qmax_init = rtm_agent.experience_replay(curr_ep)
@@ -353,7 +348,7 @@ def main():
 		# Append average TD error per episode to list
 		td_error.append(rms_td_err_ep)
 		neptune.log_metric('TD_ERR (RMS)', rms_td_err_ep)
-		neptune.log_metric('Max Initial Q', qmax_init)
+		neptune.log_metric('reward', tot_reward)
 		
 	print("Len of TDERR array: {}".format(len(td_error)))
 
@@ -374,6 +369,7 @@ def main():
 	neptune.log_artifact(CONFIG_PATH)
 
 	discretizer.plot_bin_dist(plot_file=BIN_DIST_FILE, binarizer=binarizer)
+	print("Saved bin distribution file at: {}".format(BIN_DIST_FILE))
 	
 
 
