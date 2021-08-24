@@ -18,15 +18,16 @@ import neptune
 
 neptune.init(project_qualified_name='v3rm1/MC-QRTM')
 
+seed_values = [2, 131, 1729]#, 4027, 10069]
 
 # Reward decay
 GAMMA = 0.99
 # Learning Rate
-ALPHA = 0.001
+ALPHA = 0.01
 
 # Experience-Replay Memory Parameters
 MEMORY_SIZE = 10000
-BATCH_SIZE = 64
+BATCH_SIZE = 100
 
 # Exploration-Exploitation Parameters
 EPSILON_MIN = 0.01
@@ -38,20 +39,23 @@ EPISODES = 3000
 
 STDOUT_LOG = os.path.join(os.path.dirname(os.path.realpath(__file__)), "run_"+strftime("%Y%m%d_%H%M%S")+".txt")
 
+
+
 class DQNAgent:
-    """ """
+
     def __init__(self, environment):
         super().__init__()
         self.obs_space = environment.observation_space.shape[0]
         self.action_space = environment.action_space.n
 
-        self.memory = deque(maxlen=MEMORY_SIZE)
+        # self.memory = deque(maxlen=MEMORY_SIZE)
+        self.memory = []
 
         self.epsilon = EPSILON_MAX
         self.q_net = self.network()
 
     def network(self):
-        """ """
+
         self.model = keras.Sequential()
         self.model.add(
             keras.layers.Dense(400,
@@ -67,33 +71,21 @@ class DQNAgent:
         return self.model
 
     def memorize(self, state, action, reward, next_state, done):
-        """
 
-        :param state: 
-        :param action: 
-        :param reward: 
-        :param next_state: 
-        :param done: 
-
-        """
         self.memory.append((state, action, reward, next_state, done))
 
     def act(self, state):
-        """
-
-        :param state: 
-
-        """
         if np.random.rand() <= self.epsilon:
             return random.randrange(self.action_space)
         q_values = self.q_net.predict(state)
         return np.argmax(q_values[0])
 
     def experience_replay(self, episode):
-        """ """
+
         if len(self.memory) < BATCH_SIZE:
             return
-        batch = random.sample(self.memory, BATCH_SIZE)
+        # batch = random.sample(self.memory, BATCH_SIZE)
+        batch = self.memory[-BATCH_SIZE:]
         for state, action, reward, next_state, done in batch:
             q_update = reward
             print("q_update before discount:{}".format(q_update), file=open(STDOUT_LOG, 'a'))
@@ -112,7 +104,7 @@ def main():
     """ """
     env = gym.make("MountainCar-v0")
     score_log = ScoreLogger("MountainCar-v0")
-    neptune.create_experiment(name="MLP", tags=["peregrine"])
+    neptune.create_experiment(name="MLP", tags=["MLP"])
 
     dqn_agent = DQNAgent(env)
     for ep in range(EPISODES):

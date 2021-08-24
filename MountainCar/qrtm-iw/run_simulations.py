@@ -48,7 +48,8 @@ class RTMQL:
 		self.obs_space = environment.observation_space.shape[0]
 		self.action_space = config['game_params']['action_space']
 
-		self.memory = deque(maxlen=config['memory_params']['memory_size'])
+		# self.memory = deque(maxlen=config['memory_params']['memory_size'])
+		self.memory = []
 		self.replay_batch = config['memory_params']['batch_size']
 
 		self.episodes = config['game_params']['episodes']
@@ -127,7 +128,8 @@ class RTMQL:
 		if len(self.memory) < self.replay_batch:
 			return 0, 0
 		# Generate random batch from memory
-		batch = random.sample(self.memory, self.replay_batch)
+		# batch = random.sample(self.memory, self.replay_batch)
+		batch = self.memory[-self.replay_batch:]
 
 		for state, action, reward, next_state, done in batch:
 			act_idx = self.action_space.index(action)
