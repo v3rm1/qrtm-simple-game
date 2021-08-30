@@ -152,6 +152,9 @@ class RTMQL:
 				q_update += self.learning_rate * td_error
 			
 			# Add update to q_value of action taken for state
+			print("Q-Vals: {}".format(q_values))
+			print("Target Q-Vals: {}".format(target_q))
+			print("TD_err: {}".format(td_error))
 			q_values[act_idx] += q_update
 
 			# Update agents on new q-values for the state
@@ -351,6 +354,8 @@ def main():
 		td_error.append(rms_td_err_ep)
 		neptune.log_metric('TD_ERR (RMS)', rms_td_err_ep)
 		neptune.log_metric('reward', tot_reward)
+		neptune.log_metric('q_init', qmax_init)
+		
 		
 	print("Len of TDERR array: {}".format(len(td_error)))
 

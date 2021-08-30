@@ -2,10 +2,10 @@
 
 learning_params:
   gamma: 0.99
-  learning_rate: 0.9
+  learning_rate: 1
   EDF:
     epsilon_min: 0.01
-    epsilon_max: 0.5
+    epsilon_max: 1
     epsilon_decay: 0.99
   SEDF:
     tail: 0.4
@@ -35,7 +35,7 @@ qrtm_params:
   incremental: True
   weighted_clauses: False
   # Set as multiple of number_of_features
-  ta_states: 4
+  ta_states: 2
 
 preproc_params:
   # Binarizer has to be a string 
