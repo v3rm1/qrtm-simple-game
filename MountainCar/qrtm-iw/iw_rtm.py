@@ -30,7 +30,7 @@ class WeightedTsetlinMachine:
 		self.clause_sign = np.zeros(self.number_of_clauses, dtype=np.int32)
 
 		# Initialize weight matrix
-		self.weights = np.zeros(self.number_of_clauses, dtype=np.int32)
+		self.weights = np.ones(self.number_of_clauses, dtype=np.int32)
 		
 		# Data structures for intermediate calculations (clause output, summation of votes, and feedback to clauses)
 		self.clause_output = np.zeros(shape=(self.number_of_clauses), dtype=np.int32)

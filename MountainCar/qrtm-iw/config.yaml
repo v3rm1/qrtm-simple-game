@@ -19,9 +19,9 @@ memory_params:
 
 game_params:
   episodes: 3000
-  reward: 1
+  reward: -1
+  max_steps: 200
   max_score: 100
-  min_score: -100
   action_space: [0,2]
 
 qrtm_params:
@@ -31,9 +31,9 @@ qrtm_params:
   # number_of_clauses = 2 * T ALWAYS
   number_of_clauses: 200
   T: 1
-  s: 5
+  s: 10
   incremental: True
-  weighted_clauses: False
+  weighted_clauses: True
   # Set as multiple of number_of_features
   ta_states: 2
 

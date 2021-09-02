@@ -81,7 +81,7 @@ class TsetlinMachine:
 		
 		elif output_sum < 0:
 			output_sum = 0
-		# print("Sum of clause votes: {}".format(output_sum))
+		print("Sum of clause votes: {}".format(output_sum))
 		return output_sum
 
 
@@ -167,15 +167,17 @@ class TsetlinMachine:
 		# Initialize feedback to clauses
 		for j in range(self.number_of_clauses):
 			self.feedback_to_clauses[j] = 0
-
+		print("Y: {}\t op_val: {}".format(y, output_value))
 		# Type I feedback if target is higher than the predicted value
-		if y > output_value:
+		if abs(y) > abs(output_value):
+			print("Type I feedback")
 			for j in range(self.number_of_clauses):
 				if 1.0*random.randint(0, RAND_MAX)/RAND_MAX < 1.0*(abs(y-output_value))/(self.max_target - self.min_target):
 					self.feedback_to_clauses[j] += 1
 					
 		# Type II feedback if target is lower than the predicted value
-		elif y < output_value:
+		elif abs(y) < abs(output_value):
+			print("Type II feedback")
 			for j in range(self.number_of_clauses):
 				if 1.0*random.randint(0, RAND_MAX)/RAND_MAX < 1.0*(abs(y-output_value))/(self.max_target - self.min_target):
 					self.feedback_to_clauses[j] -= 1
@@ -189,9 +191,9 @@ class TsetlinMachine:
 				### Type I Feedback  ###
 				########################
 				
-				if self.clause_output[j] == 0:		
+				if self.clause_output[j] == 0:
 					for k in range(self.number_of_features):	
-						if 1.0*random.randint(0, RAND_MAX)/RAND_MAX <= 1.0/self.s:								
+						if 1.0*random.randint(0, RAND_MAX)/RAND_MAX <= 1.0/self.s:
 							if self.ta_state[j,k,0] > 1:
 								self.ta_state[j,k,0] -= 1
 													
@@ -199,7 +201,7 @@ class TsetlinMachine:
 							if self.ta_state[j,k,1] > 1:
 								self.ta_state[j,k,1] -= 1
 
-				if self.clause_output[j] == 1:					
+				if self.clause_output[j] == 1:
 					for k in range(self.number_of_features):
 						if X[k] == 1:
 							if 1.0*random.randint(0, RAND_MAX)/RAND_MAX <= 1.0*(self.s-1)/self.s:

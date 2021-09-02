@@ -56,12 +56,14 @@ class RTMQL:
 
 		self.episodes = config['game_params']['episodes']
 		self.reward = config['game_params']['reward']
-		self.max_score = config['game_params']['max_score']
-		self.min_score = config['game_params']['min_score']
 
 		self.gamma = config['learning_params']['gamma']
 		self.learning_rate = config['learning_params']['learning_rate']
 		
+		self.max_steps = config['game_params']['max_steps']
+		self.max_score = config['game_params']['max_score']
+		self.min_score = self.learning_rate * self.reward * (1-pow(self.gamma, self.max_steps))/(1-self.gamma)
+
 		self.weighted_clauses = config['qrtm_params']['weighted_clauses']
 		self.incremental = config['qrtm_params']['incremental']
 		self.ta_states = config['qrtm_params']['ta_states']
@@ -148,10 +150,10 @@ class RTMQL:
 			# print("Q_Values - State: {}".format(q_values), file=open(STDOUT_LOG, 'a'))
 			# print("Next State: {}".format(next_state), file=open(STDOUT_LOG, 'a'))
 			# print("Expectation - Next State: {}".format(target_q), file=open(STDOUT_LOG, 'a'))
-
+			print("Q-vals: {}\nExpectation: {}".format(q_values, target_q))
 			# Compute temporal difference error
 			td_error = reward + self.gamma * np.amax(target_q) - q_values[act_idx]
-
+			
 			if done:
 				# If game is done, the update equals reward
 				q_update = reward
@@ -203,7 +205,7 @@ def load_config(config_file):
 
 def store_config_tested(config_data, win_count, run_date, tested_configs_file_path=CONFIG_TEST_SAVE_PATH):
 	# Defining dictionary key mappings
-	field_names = ['decay_fn', 'epsilon_min', 'epsilon_max', 'epsilon_decay', 'alpha', 'beta', 'delta', 'reward_discount', 'mem_size', 'batch_size', 'episodes', 'reward', 'max_score', 'min_score', 'action_space', 'qrtm_n_clauses', 'ta_states', 'T', 's', 'wins', 'win_ratio', 'run_date', 'bin_length', 'incremental', 'weighted_clauses', 'binarizer']
+	field_names = ['decay_fn', 'epsilon_min', 'epsilon_max', 'epsilon_decay', 'alpha', 'beta', 'delta', 'reward_discount', 'mem_size', 'batch_size', 'episodes', 'reward', 'action_space', 'qrtm_n_clauses', 'ta_states', 'T', 's', 'wins', 'win_ratio', 'run_date', 'bin_length', 'incremental', 'weighted_clauses', 'binarizer']
 	decay_fn = config_data['learning_params']['epsilon_decay_function']
 	if decay_fn == "SEDF":
 		alpha = config_data['learning_params']['SEDF']['tail']
@@ -232,8 +234,6 @@ def store_config_tested(config_data, win_count, run_date, tested_configs_file_pa
 		'batch_size': config_data['memory_params']['batch_size'],
 		'episodes': config_data['game_params']['episodes'],
 		'reward': config_data['game_params']['reward'],
-		'max_score': config_data['game_params']['max_score'],
-		'min_score': config_data['game_params']['min_score'],
 		'action_space': config_data['game_params']['action_space'],
 		'qrtm_n_clauses': config_data['qrtm_params']['number_of_clauses'],
 		'ta_states': config_data['qrtm_params']['ta_states'],
@@ -261,7 +261,7 @@ def main():
 	neptune.create_experiment(name="RTM", tags=["peregrine"])
 
 	if TEST_VAR:
-		neptune.append_tag("test")
+		neptune.append_tag("test-same q-vals")
 
 	config = load_config(CONFIG_PATH)
 	gamma = config['learning_params']['gamma']
@@ -269,6 +269,7 @@ def main():
 	run_dt = strftime("%Y%m%d_%H%M%S")
 	epsilon_decay_function = config['learning_params']['epsilon_decay_function']
 	feature_length = config['qrtm_params']['feature_length']
+	max_score = config['game_params']['max_score']
 	print("Configuration file loaded. Creating environment.")
 	env = gym.make("MountainCar-v0")
 	if gamma<1:
@@ -314,6 +315,8 @@ def main():
 		state = discretizer.cartpole_binarizer(input_state=state, n_bins=binarized_length, bin_type=binarizer)
 		state = np.reshape(state, [1, feature_length * env.observation_space.shape[0]])[0]
 		
+		# NOTE: Appending previous action to the state
+		state = np.concatenate([state, [0],[0]])
 
 		while not done:
 			step += 1
@@ -327,6 +330,10 @@ def main():
 			# Discretize and reshape next_state
 			next_state = discretizer.cartpole_binarizer(input_state=next_state, n_bins=binarized_length, bin_type=binarizer)
 			next_state = np.reshape(next_state, [1, feature_length * env.observation_space.shape[0]])[0]
+			
+			#NOTE: Appending action to state
+			next_state = np.concatenate([next_state, [0],[0]]) if action == 0 else np.concatenate([next_state, [1],[0]])
+			
 			print("Next State: {0}".format(next_state), file=open(STDOUT_LOG, 'a'))
 			print("Reward: {}".format(reward), file=open(STDOUT_LOG, 'a'))
 			# Memorization
@@ -339,7 +346,7 @@ def main():
 			if done and step < 200:
 				# Increment win counter conditionally
 				win_ctr += 1
-				reward = 100
+				reward = max_score
 				tot_reward = reward
 				print("Episode: {0}\nEpsilon: {1}\tScore: {2}".format(curr_ep, rtm_agent.epsilon, step), file=open(STDOUT_LOG, 'a'))				
 

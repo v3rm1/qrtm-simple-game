@@ -54,11 +54,15 @@ class RTMQL:
 
 		self.episodes = config['game_params']['episodes']
 		self.reward = config['game_params']['reward']
-		self.max_score = config['game_params']['max_score']
-		self.min_score = config['game_params']['min_score']
-
+		self.max_steps = config['game_params']['max_steps']
+		
 		self.gamma = config['learning_params']['gamma']
 		self.learning_rate = config['learning_params']['learning_rate']
+
+		self.max_score = config['game_params']['max_score']
+		self.min_score = self.learning_rate * self.reward * (1-pow(self.gamma, self.max_steps))/(1-self.gamma)
+
+		
 		
 		self.weighted_clauses = config['qrtm_params']['weighted_clauses']
 		self.incremental = config['qrtm_params']['incremental']
@@ -214,8 +218,6 @@ def store_config_tested(config_data, win_count, run_date, tested_configs_file_pa
 		'batch_size': config_data['memory_params']['batch_size'],
 		'episodes': config_data['game_params']['episodes'],
 		'reward': config_data['game_params']['reward'],
-		'max_score': config_data['game_params']['max_score'],
-		'min_score': config_data['game_params']['min_score'],
 		'action_space': config_data['game_params']['action_space'],
 		'qrtm_n_clauses': config_data['qrtm_params']['number_of_clauses'],
 		'ta_states': config_data['qrtm_params']['ta_states'],
