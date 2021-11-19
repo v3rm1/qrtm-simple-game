@@ -72,7 +72,7 @@ class ScoreLogger:
                            sedf_beta=sedf_beta,
                            sedf_delta=sedf_delta,
                            edf_epsilon_decay=edf_epsilon_decay)
-            exit()
+            
 
     def _save_csv(self, path, score):
         """

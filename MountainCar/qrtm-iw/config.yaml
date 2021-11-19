@@ -2,7 +2,7 @@
 
 learning_params:
   gamma: 0.99
-  learning_rate: 1
+  learning_rate: 0.01
   EDF:
     epsilon_min: 0.01
     epsilon_max: 1
@@ -13,29 +13,30 @@ learning_params:
     tail_gradient: 0.3
   epsilon_decay_function: SEDF 
 
+
 memory_params:
   memory_size: 10000
-  batch_size: 300
+  batch_size: 200
 
 game_params:
-  episodes: 3000
+  episodes: 500
   reward: -1
   max_steps: 200
   max_score: 100
   action_space: [0,2]
 
 qrtm_params:
-  # number_of_features = num_inputs [in this case, 4] * feature_length ALWAYS
+  # number_of_features = num_inputs [in this case, 2] * feature_length ALWAYS
   number_of_features: 16
   feature_length: 8
   # number_of_clauses = 2 * T ALWAYS
-  number_of_clauses: 200
-  T: 1
-  s: 10
+  number_of_clauses: 160
+  T: 80
+  s: 5
   incremental: True
-  weighted_clauses: True
+  weighted_clauses: False
   # Set as multiple of number_of_features
-  ta_states: 2
+  ta_states: 16
 
 preproc_params:
   # Binarizer has to be a string 

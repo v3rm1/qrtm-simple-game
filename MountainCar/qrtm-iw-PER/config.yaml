@@ -19,7 +19,7 @@ memory_params:
   batch_size: 250
 
 game_params:
-  episodes: 2000
+  episodes: 3000
   reward: 1
   max_score: 100
   min_score: -100
@@ -27,8 +27,8 @@ game_params:
 
 qrtm_params:
   # number_of_features = num_inputs [in this case, 4] * feature_length ALWAYS
-  number_of_features: 16
-  feature_length: 8
+  number_of_features: 8
+  feature_length: 4
   # number_of_clauses = 2 * T ALWAYS
   number_of_clauses: 500
   T: 1

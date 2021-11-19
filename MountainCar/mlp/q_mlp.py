@@ -18,7 +18,7 @@ import neptune
 
 neptune.init(project_qualified_name='v3rm1/MC-QRTM')
 
-seed_values = [2, 131, 1729]#, 4027, 10069]
+seed_values = [2]#[2, 131, 1729, 4027, 10069]
 
 # Reward decay
 GAMMA = 0.99
@@ -35,10 +35,11 @@ EPSILON_MAX = 1
 EPSILON_DECAY = 0.99
 
 # Number Of Episodes to run
-EPISODES = 3000
+EPISODES = 10
 
 EXPT_DATA = os.path.join(os.path.dirname(os.path.realpath(__file__)), "expt_csv/expts_"+strftime("%Y%m%d_%H%M%S")+".csv")
 
+TF_LOG_DIR = os.path.join(os.path.dirname(os.path.realpath(__file__)), "logger/logs/")
 
 
 class DQNAgent:
@@ -58,11 +59,14 @@ class DQNAgent:
 
         self.model = keras.Sequential()
         self.model.add(
-            keras.layers.Dense(400,
+            keras.layers.Dense(15,
                                input_shape=(self.obs_space, ),
                                activation="relu"))
         self.model.add(
-            keras.layers.Dense(300,
+            keras.layers.Dense(20,
+                               activation="relu"))
+        self.model.add(
+            keras.layers.Dense(10,
                                activation="relu"))
         self.model.add(
             keras.layers.Dense(self.action_space, activation="linear"))
@@ -80,22 +84,22 @@ class DQNAgent:
         q_values = self.q_net.predict(state)
         return np.argmax(q_values[0])
 
-    def experience_replay(self, episode, log_file):
+    def experience_replay(self, episode):
 
         if len(self.memory) < BATCH_SIZE:
             return
         batch = random.sample(self.memory, BATCH_SIZE)
-        # batch = self.memory[-BATCH_SIZE:]
+
         for state, action, reward, next_state, done in batch:
             q_update = reward
-            print("q_update before discount:{}".format(q_update), file=open(log_file, 'a'))
+            
             if not done:
                 q_update = reward + GAMMA * np.amax(self.q_net.predict(next_state)[0])
-                print("q_update after discount:{}".format(q_update), file=open(log_file, 'a'))
+                
             q_values = self.q_net.predict(state)
             q_values[0][action] = q_update
-            # tensorboard_callback = tf.keras.callbacks.TensorBoard(log_dir="./logs", histogram_freq=0, write_graph=True, write_images=True)
-            self.q_net.fit(state, q_values, verbose=0)
+            tensorboard_callback = tf.keras.callbacks.TensorBoard(log_dir=TF_LOG_DIR, histogram_freq=0, write_graph=True, write_images=True)
+            self.q_net.fit(state, q_values, verbose=0, callbacks=[tensorboard_callback])
         self.epsilon = EPSILON_MAX * pow(EPSILON_DECAY, episode)
         self.epsilon = max(EPSILON_MIN, self.epsilon)
 
@@ -104,8 +108,6 @@ def main():
     expt_data = pd.DataFrame()
     for seed_value in seed_values:
         
-        # NOTE: DEFINING A STDOUT LOGGER and BINARIZER DISTRIBUTION PLOT PATHS
-        STDOUT_LOG = os.path.join(os.path.dirname(os.path.realpath(__file__)), "logger/txt_logs/run_"+strftime("%Y%m%d_%H%M%S")+"_"+str(seed_value)+".txt")
         # 1. Set `PYTHONHASHSEED` environment variable at a fixed value
         os.environ['PYTHONHASHSEED']=str(seed_value)
         # 2. Set `python` built-in pseudo-random generator at a fixed value
@@ -115,9 +117,11 @@ def main():
 
         env = gym.make("MountainCar-v0")
         score_log = ScoreLogger("MountainCar-v0")
-        neptune.create_experiment(name="MLP", tags=["MLP"])
+        neptune.create_experiment(name="MLP", tags=["MLP", str(seed_value)])
 
         dqn_agent = DQNAgent(env)
+        score = []
+        rew = []
         for ep in range(EPISODES):
             state = env.reset()
             state = np.reshape(state, [1, env.observation_space.shape[0]])
@@ -135,26 +139,26 @@ def main():
                 accum_reward += reward
                 state = next_state
                 if done and episode_len < 200:
-                    # Reward egineering: if goal is reached in less than 200 steps, reward = episode reward + 250
                     reward = 100
                     accum_reward += reward
                     print("Episode: {0}\nEpsilon: {1}\tScore: {2}".format(
-                        ep, dqn_agent.epsilon, accum_reward), file=open(STDOUT_LOG, 'a'))
+                        ep, dqn_agent.epsilon, accum_reward))
                     score_log.add_score(episode_len, ep)
                 elif done:
                     accum_reward += reward
                     print("Episode: {0}\nEpsilon: {1}\tScore: {2}".format(
-                        ep, dqn_agent.epsilon, accum_reward), file=open(STDOUT_LOG, 'a'))
+                        ep, dqn_agent.epsilon, accum_reward))
                     score_log.add_score(episode_len, ep)
-                    # reward engineering for other steps: reward = distance travelled + velocity
-                    print("Reward: {}".format(reward), file=open(STDOUT_LOG, 'a'))
                 dqn_agent.memorize(state, action, reward, next_state, done)
-            dqn_agent.experience_replay(ep, STDOUT_LOG)
+            dqn_agent.experience_replay(ep)
             
             neptune.log_metric('steps', episode_len)
             neptune.log_metric('accum_reward', accum_reward)
+            score.append(episode_len)
+            rew.append(accum_reward)
         # Add experiment columns to the dataframe
-        expt_data.loc[:, 'score_'+str(seed_value)] = episode_len
+        expt_data.loc[:, 'score_'+str(seed_value)] = score
+        expt_data.loc[:, 'reward_'+str(seed_value)] = rew
     expt_data.to_csv(EXPT_DATA)
 
 
