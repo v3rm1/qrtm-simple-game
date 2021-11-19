@@ -133,5 +133,7 @@ dmypy.json
 *.txt
 *.out
 !requirements.txt
-./logger/logs
-./MountainCar/mlp/logger/logs
+
+logger/logs/train/
+MountainCar/mlp/logger/logs/train/
+cartpole/mlp/logger/logs/train/
