@@ -133,3 +133,5 @@ dmypy.json
 *.txt
 *.out
 !requirements.txt
+./logger/logs
+./MountainCar/mlp/logger/logs
