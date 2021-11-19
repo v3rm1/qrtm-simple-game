@@ -20,7 +20,7 @@ neptune.init(project_qualified_name='v3rm1/CP-QRTM')
 
 # NOTE: SETTING GLOBAL SEED VALUES FOR CONSISTENT RESULTS IN EXPERIMENTAL SESSIONS
 # Set a seed value
-seed_values = 1729 #[2, 131, 1729]#, 4027, 10069]
+seed_values = [2, 131, 1729, 4027, 10069]
 
 # A variable for attaching test tag to the experiment
 TEST_VAR = True
@@ -28,7 +28,7 @@ TEST_VAR = True
 # Path to file containing all configurations for the variables used by the q-rtm system
 CONFIG_PATH = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'config.yaml')
 #
-CONFIG_TEST_SAVE_PATH = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'tested_configs.csv')
+CONFIG_TEST_SAVE_PATH = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'tested_configs_new.csv')
 
 EXPT_DATA = os.path.join(os.path.dirname(os.path.realpath(__file__)), "expt_csv/expts_"+strftime("%Y%m%d_%H%M%S")+".csv")
 class RTMQL:
@@ -106,11 +106,11 @@ class RTMQL:
 	def act(self, state, logger):
 		if np.random.rand() <= self.epsilon:
 			a = random.randrange(self.action_space)
-			print("RANDOM ACTION: {}".format(a), file=open(logger, 'a'))
+
 			return a
 		
 		q_values = [self.agent_1.predict(state), self.agent_2.predict(state)]
-		print("LEARNER ACTION : {}".format(np.argmax(q_values)), file=open(logger, 'a'))
+
 		return np.argmax(q_values)
 	
 	def experience_replay(self, episode, logger):
@@ -129,12 +129,6 @@ class RTMQL:
 			# Compute extected q-values for next state
 			target_q = [self.agent_1.predict(next_state), self.agent_2.predict(next_state)]
 
-			print("PRE FIT", file=open(logger, 'a'))
-			print("State: {}".format(state), file=open(logger, 'a'))
-			print("Q_Values - State: {}".format(q_values), file=open(logger, 'a'))
-			print("Next State: {}".format(next_state), file=open(logger, 'a'))
-			print("Expectation - Next State: {}".format(target_q), file=open(logger, 'a'))
-
 			# Compute temporal difference error
 			td_error = reward + self.gamma * np.amax(target_q) - q_values[action]
 
@@ -149,21 +143,14 @@ class RTMQL:
 			q_values[action] += q_update
 
 			# Update agents on new q-values for the state
-			print("AGENT 1")
 
 			self.agent_1.update(state, q_values[0])
-			print("AGENT 2")
+
 
 			self.agent_2.update(state, q_values[1])
 
 			td_err_post_fit = reward + self.gamma * np.amax([self.agent_1.predict(next_state), self.agent_2.predict(next_state)]) - q_values[action]
 
-			print("TD_ERROR Pre fit: {}\nTD_ERROR Post fit: {}".format(td_error, td_err_post_fit), file=open(logger, 'a'))
-			print("POST FIT", file=open(logger, 'a'))
-			print("State: {}".format(state), file=open(logger, 'a'))
-			print("Q_Values - State: {}".format([self.agent_1.predict(state), self.agent_2.predict(state)]), file=open(logger, 'a'))
-			print("Next State: {}".format(next_state), file=open(logger, 'a'))
-			print("Expectation - Next State: {}".format([self.agent_1.predict(next_state), self.agent_2.predict(next_state)]), file=open(logger, 'a'))
 
 			td_err_list.append(pow(td_error, 2))
 			
@@ -256,7 +243,7 @@ def main():
 		STDOUT_LOG = os.path.join(os.path.dirname(os.path.realpath(__file__)), "logger/txt_logs/run_"+strftime("%Y%m%d_%H%M%S")+"_"+str(seed_value)+".txt")
 		BIN_DIST_FILE = os.path.join(os.path.dirname(os.path.realpath(__file__)), "logger/bin_dist/bin_dist"+strftime("%Y%m%d_%H%M%S")+"_"+str(seed_value)+".png")
 
-		neptune.create_experiment(name="IWRTM", tags=["peregrine", "IW"])
+		neptune.create_experiment(name="IWRTM", tags=["IW", str(seed_value)])
 
 		if TEST_VAR:
 			neptune.append_tag("test")
@@ -317,14 +304,14 @@ def main():
 				step += 1
 				# Request agent action
 				action = rtm_agent.act(state, logger=STDOUT_LOG)
-				print("State: {0}".format(state), file=open(STDOUT_LOG, 'a'))
+
 				# Run simulation step in environment, retrieve next state, reward and game status
 				next_state, reward, done, info = env.step(action)
 				reward = reward if not done else -reward
 				# Discretize and reshape next_state
 				next_state = discretizer.cartpole_binarizer(input_state=next_state, n_bins=binarized_length, bin_type=binarizer)
 				next_state = np.reshape(next_state, [1, feature_length * env.observation_space.shape[0]])[0]
-				print("Next State: {0}".format(next_state), file=open(STDOUT_LOG, 'a'))
+
 				# Memorization
 				rtm_agent.memorize(state, action, reward, next_state, done)
 
@@ -350,19 +337,16 @@ def main():
 					neptune.log_metric('score', step)
 					scores.append(step)
 					break
-			# if step < 195:	
-			# 	# Store TD error from experience replay
 			
 			rms_td_err_ep, qmax_init = rtm_agent.experience_replay(curr_ep, logger=STDOUT_LOG)
-			# else:
-			# 	rms_td_err_ep = 0
+
 			print("episode td err RMS: {}".format(rms_td_err_ep), file=open(STDOUT_LOG, 'a'))
 			# Append average TD error per episode to list
 			td_error.append(rms_td_err_ep)
 			neptune.log_metric('TD_ERR (RMS)', rms_td_err_ep)
 			neptune.log_metric('Max Initial Q', qmax_init)
 			
-		print("Len of TDERR array: {}".format(len(td_error)), file=open(STDOUT_LOG, 'a'))
+
 
 		# Add experiment columns to the dataframe
 		expt_data.loc[:, 'score_'+str(seed_value)] = scores
@@ -374,9 +358,6 @@ def main():
 							T=config["qrtm_params"]["T"],
 							feature_length=feature_length)
 		
-		
-		# Print win counter
-		print("win_ctr: {}".format(win_ctr), file=open(STDOUT_LOG, 'a'))
 
 		# Store configuration tested, win count and timestamp of experiment
 		store_config_tested(config, win_ctr, run_dt)

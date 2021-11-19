@@ -20,7 +20,7 @@ neptune.init(project_qualified_name='v3rm1/CP-QRTM')
 
 # NOTE: SETTING GLOBAL SEED VALUES FOR CONSISTENT RESULTS IN EXPERIMENTAL SESSIONS
 # Set a seed value
-seed_values = [2, 131, 1729]#, 4027, 10069]
+seed_values = [2, 131, 1729, 4027, 10069]
 
 # A variable for attaching test tag to the experiment
 TEST_VAR = False
@@ -28,7 +28,7 @@ TEST_VAR = False
 # Path to file containing all configurations for the variables used by the q-rtm system
 CONFIG_PATH = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'config.yaml')
 
-CONFIG_TEST_SAVE_PATH = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'tested_configs.csv')
+CONFIG_TEST_SAVE_PATH = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'tested_configs_new.csv')
 
 EXPT_DATA = os.path.join(os.path.dirname(os.path.realpath(__file__)), "expt_csv/expts_"+strftime("%Y%m%d_%H%M%S")+".csv")
 
@@ -129,11 +129,11 @@ class RTMQL:
 			# Compute extected q-values for next state
 			target_q = [self.agent_1.predict(next_state), self.agent_2.predict(next_state)]
 
-			print("PRE FIT", file=open(logger, 'a'))
-			print("State: {}".format(state), file=open(logger, 'a'))
-			print("Q_Values - State: {}".format(q_values), file=open(logger, 'a'))
-			print("Next State: {}".format(next_state), file=open(logger, 'a'))
-			print("Expectation - Next State: {}".format(target_q), file=open(logger, 'a'))
+			# print("PRE FIT", file=open(logger, 'a'))
+			# print("State: {}".format(state), file=open(logger, 'a'))
+			# print("Q_Values - State: {}".format(q_values), file=open(logger, 'a'))
+			# print("Next State: {}".format(next_state), file=open(logger, 'a'))
+			# print("Expectation - Next State: {}".format(target_q), file=open(logger, 'a'))
 
 			# Compute temporal difference error
 			td_error = reward + self.gamma * np.amax(target_q) - q_values[action]
@@ -156,12 +156,12 @@ class RTMQL:
 
 			td_err_post_fit = reward + self.gamma * np.amax([self.agent_1.predict(next_state), self.agent_2.predict(next_state)]) - q_values[action]
 
-			print("TD_ERROR Pre fit: {}\nTD_ERROR Post fit: {}".format(td_error, td_err_post_fit), file=open(logger, 'a'))
-			print("POST FIT", file=open(logger, 'a'))
-			print("State: {}".format(state), file=open(logger, 'a'))
-			print("Q_Values - State: {}".format([self.agent_1.predict(state), self.agent_2.predict(state)]), file=open(logger, 'a'))
-			print("Next State: {}".format(next_state), file=open(logger, 'a'))
-			print("Expectation - Next State: {}".format([self.agent_1.predict(next_state), self.agent_2.predict(next_state)]), file=open(logger, 'a'))
+			# print("TD_ERROR Pre fit: {}\nTD_ERROR Post fit: {}".format(td_error, td_err_post_fit), file=open(logger, 'a'))
+			# print("POST FIT", file=open(logger, 'a'))
+			# print("State: {}".format(state), file=open(logger, 'a'))
+			# print("Q_Values - State: {}".format([self.agent_1.predict(state), self.agent_2.predict(state)]), file=open(logger, 'a'))
+			# print("Next State: {}".format(next_state), file=open(logger, 'a'))
+			# print("Expectation - Next State: {}".format([self.agent_1.predict(next_state), self.agent_2.predict(next_state)]), file=open(logger, 'a'))
 
 			td_err_list.append(pow(td_error, 2))
 		
@@ -253,7 +253,7 @@ def main():
 		# 3. Set `numpy` pseudo-random generator at a fixed value
 		np.random.seed(seed_value)
 
-		neptune.create_experiment(name="QRTM", tags=["peregrine", "QRTM"])
+		neptune.create_experiment(name="QRTM", tags=["QRTM", str(seed_value)])
 
 		if TEST_VAR:
 			neptune.append_tag("test")
