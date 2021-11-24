@@ -7,11 +7,11 @@ from collections import deque
 from time import strftime
 import csv
 import gym
-from logger.score import ScoreLogger
+
 from discretizer import CustomDiscretizer
-from logger.debugger import DebugLogger
+
 from iw_rtm import WeightedTsetlinMachine
-import sys
+
 import neptune
 import pandas as pd
 
@@ -20,7 +20,7 @@ neptune.init(project_qualified_name='v3rm1/MC-QRTM')
 
 # NOTE: SETTING GLOBAL SEED VALUES FOR CONSISTENT RESULTS IN EXPERIMENTAL SESSIONS
 # Set a seed value
-seed_values = [2, 131, 1729, 4027, 10069]
+seed_values = [2, 131, 1729]#, 4027, 10069]
 
 # A variable for attaching test tag to the experiment
 TEST_VAR = True
@@ -28,7 +28,7 @@ TEST_VAR = True
 # Path to file containing all configurations for the variables used by the q-rtm system
 CONFIG_PATH = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'config.yaml')
 #
-CONFIG_TEST_SAVE_PATH = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'tested_configs.csv')
+CONFIG_TEST_SAVE_PATH = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'tested_configs_new.csv')
 
 
 BIN_DIST_FILE = os.path.join(os.path.dirname(os.path.realpath(__file__)), "logger/bin_dist/bin_dist"+strftime("%Y%m%d_%H%M%S")+".png")
@@ -250,7 +250,7 @@ def main():
 		# 3. Set `numpy` pseudo-random generator at a fixed value
 		np.random.seed(seed_value)
 
-		neptune.create_experiment(name="RTM-IW", tags=["lwp", "IW"])
+		neptune.create_experiment(name="RTM-IW", tags=["IW", str(seed_value)])
 
 		if TEST_VAR:
 			neptune.append_tag("test")
@@ -277,9 +277,6 @@ def main():
 		neptune.log_text('Epsilon Decay Function', str(config['learning_params']['epsilon_decay_function']))
 		neptune.log_text('Gamma', str(config['learning_params']['gamma']))
 		
-		# Initializing loggers and watchers
-		debug_log = DebugLogger("MountainCar-v0")
-		score_log = ScoreLogger("MountainCar-v0", episodes)
 
 		print("Initializing custom discretizer.")
 		discretizer = CustomDiscretizer()
@@ -291,6 +288,9 @@ def main():
 		# Initializing experiment variables and data structures
 		td_error = []
 		win_ctr = 0
+
+		eps_steps = []
+		eps_acc_rew = []
 
 		for curr_ep in range(episodes):
 			
@@ -332,36 +332,15 @@ def main():
 					tot_reward = reward
 					print("Episode: {0}\nEpsilon: {1}\tScore: {2}".format(curr_ep, rtm_agent.epsilon, step))
 
-					score_log.add_score(step,
-						curr_ep,
-						gamma,
-						epsilon_decay_function,
-						consecutive_runs=episodes,
-						sedf_alpha=config['learning_params']['SEDF']['tail'],
-						sedf_beta=config['learning_params']['SEDF']['slope'],
-						sedf_delta=config['learning_params']['SEDF']['tail_gradient'],
-						edf_epsilon_decay=config['learning_params']['EDF']['epsilon_decay'])
-
-					break
-				elif done:
-					score_log.add_score(step,
-						curr_ep,
-						gamma,
-						epsilon_decay_function,
-						consecutive_runs=episodes,
-						sedf_alpha=config['learning_params']['SEDF']['tail'],
-						sedf_beta=config['learning_params']['SEDF']['slope'],
-						sedf_delta=config['learning_params']['SEDF']['tail_gradient'],
-						edf_epsilon_decay=config['learning_params']['EDF']['epsilon_decay'])
-				
+					
+			eps_steps.append(step)
+			eps_steps.append(tot_reward)	
 			neptune.log_metric('steps', step)
 
 			# 	# Store TD error from experience replay
 			rms_td_err_ep, qmax_init = rtm_agent.experience_replay(curr_ep)
 			
-			# else:
-			# 	rms_td_err_ep = 0
-			print("episode td err RMS: {}".format(rms_td_err_ep))
+
 			# Append average TD error per episode to list
 			td_error.append(rms_td_err_ep)
 			neptune.log_metric('TD_ERR (RMS)', rms_td_err_ep)
@@ -372,28 +351,17 @@ def main():
 		print("Len of TDERR array: {}".format(len(td_error)))
 
 		# Add experiment columns to the dataframe
-		expt_data.loc[:, 'score_'+str(seed_value)] = step
-		expt_data.loc[:, 'reward_'+str(seed_value)] = tot_reward
-		expt_data.loc[:, 'td_err_'+str(seed_value)] = td_error
+		expt_data.loc[:, 'score_'+str(seed_value)] = eps_steps
 
 
-		# Plot average TD error over episode
-		debug_log.add_watcher(td_error,
-							n_clauses=config["qrtm_params"]["number_of_clauses"],
-							T=config["qrtm_params"]["T"],
-							feature_length=feature_length)
-		
-		
-		# Print win counter
-		print("win_ctr: {}".format(win_ctr))
 
 		# Store configuration tested, win count and timestamp of experiment
 		store_config_tested(config, win_ctr, run_dt)
 
 		# neptune.log_artifact(STDOUT_LOG)
-		neptune.track_files(CONFIG_PATH)
+		neptune.log_artifact(CONFIG_PATH)
 
-		discretizer.plot_bin_dist(plot_file=BIN_DIST_FILE, binarizer=binarizer)
+
 		print("Saved bin distribution file at: {}".format(BIN_DIST_FILE))
 		print("Seed: {}".format(seed_value))
 	expt_data.to_csv(EXPT_DATA)

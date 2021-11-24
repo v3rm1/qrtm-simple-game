@@ -1,7 +1,7 @@
 # YAML Config file for RTM-QL agent
 
 learning_params:
-  gamma: 0.99
+  gamma: 0.98
   learning_rate: 0.01
   lamda: 0.2
   EDF:
@@ -19,7 +19,7 @@ memory_params:
   batch_size: 300
 
 game_params:
-  episodes: 300
+  episodes: 1000
   reward: -1
   max_steps: 200
   max_score: 100
@@ -30,13 +30,13 @@ qrtm_params:
   number_of_features: 32
   feature_length: 16
   # number_of_clauses = 2 * T ALWAYS
-  number_of_clauses: 160
-  T: 80
+  number_of_clauses: 2000
+  T: 1000
   s: 5
   incremental: True
   weighted_clauses: False
   # Set as multiple of number_of_features
-  ta_states: 16
+  ta_states: 2
 
 preproc_params:
   # Binarizer has to be a string 

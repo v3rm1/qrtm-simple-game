@@ -112,10 +112,10 @@ class CustomDiscretizer:
             op_4 = self._quartile_binner(input_state[3], 500)
         elif bin_type == "U":
             # unsigned binarizer
-            op_1 = self._unsigned_binarizer(input_state[0], -3, 3, n_bins)
-            op_2 = self._unsigned_binarizer(input_state[1], -500, 500, n_bins)
-            op_3 = self._unsigned_binarizer(input_state[2], -42, 42, n_bins)
-            op_4 = self._unsigned_binarizer(input_state[3], -500, 500, n_bins)
+            op_1 = self._unsigned_binarizer(input_state[0], -1.5, 1.5, n_bins)
+            op_2 = self._unsigned_binarizer(input_state[1], -100, 100, n_bins)
+            op_3 = self._unsigned_binarizer(input_state[2], -15, 15, n_bins)
+            op_4 = self._unsigned_binarizer(input_state[3], -100, 100, n_bins)
 
         elif bin_type == "L":
             # lesser than binned binarizer

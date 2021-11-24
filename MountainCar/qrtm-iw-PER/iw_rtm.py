@@ -152,7 +152,7 @@ class WeightedTsetlinMachine:
 		###########################
 
 		output_sum = self.sum_up_clause_votes()
-# 		print("WEIGHTS: {}".format(self.weights))
+
 		##############################
 		### Calculate Output Value ###
 		##############################

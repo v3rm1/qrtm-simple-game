@@ -7,9 +7,9 @@ from collections import deque
 from time import strftime
 import csv
 import gym
-from logger.score import ScoreLogger
+
 from discretizer import CustomDiscretizer
-from logger.debugger import DebugLogger
+
 from rtm import TsetlinMachine
 import pandas as pd
 
@@ -20,7 +20,7 @@ neptune.init(project_qualified_name='v3rm1/CP-QRTM')
 
 # NOTE: SETTING GLOBAL SEED VALUES FOR CONSISTENT RESULTS IN EXPERIMENTAL SESSIONS
 # Set a seed value
-seed_values = [2, 131, 1729, 4027, 10069]
+seed_values = [2, 131, 1729]#, 4027, 10069]
 
 # A variable for attaching test tag to the experiment
 TEST_VAR = False
@@ -108,11 +108,11 @@ class RTMQL:
 	def act(self, state, logger):
 		if np.random.rand() <= self.epsilon:
 			a = random.randrange(self.action_space)
-			print("RANDOM ACTION: {}".format(a), file=open(logger, 'a'))
+
 			return a
 		
 		q_values = [self.agent_1.predict(state), self.agent_2.predict(state)]
-		print("LEARNER ACTION: {}".format(np.argmax(q_values)), file=open(logger, 'a'))
+
 		return np.argmax(q_values)
 	
 	def experience_replay(self, episode, logger):
@@ -129,11 +129,6 @@ class RTMQL:
 			# Compute extected q-values for next state
 			target_q = [self.agent_1.predict(next_state), self.agent_2.predict(next_state)]
 
-			# print("PRE FIT", file=open(logger, 'a'))
-			# print("State: {}".format(state), file=open(logger, 'a'))
-			# print("Q_Values - State: {}".format(q_values), file=open(logger, 'a'))
-			# print("Next State: {}".format(next_state), file=open(logger, 'a'))
-			# print("Expectation - Next State: {}".format(target_q), file=open(logger, 'a'))
 
 			# Compute temporal difference error
 			td_error = reward + self.gamma * np.amax(target_q) - q_values[action]
@@ -280,9 +275,7 @@ def main():
 		neptune.log_text('Epsilon Decay Function', str(config['learning_params']['epsilon_decay_function']))
 		neptune.log_text('Gamma', str(config['learning_params']['gamma']))
 		
-		# Initializing loggers and watchers
-		debug_log = DebugLogger("CartPole-v0")
-		score_log = ScoreLogger("CartPole-v0", episodes)
+
 
 		print("Initializing custom discretizer.", file=open(STDOUT_LOG, 'a'))
 		discretizer = CustomDiscretizer()
@@ -314,14 +307,14 @@ def main():
 				step += 1
 				# Request agent action
 				action = rtm_agent.act(state, logger=STDOUT_LOG)
-				print("State: {0}".format(state), file=open(STDOUT_LOG, 'a'))
+
 				# Run simulation step in environment, retrieve next state, reward and game status
 				next_state, reward, done, info = env.step(action)
 				reward = reward if not done else -reward
 				# Discretize and reshape next_state
 				next_state = discretizer.cartpole_binarizer(input_state=next_state, n_bins=binarized_length, bin_type=binarizer)
 				next_state = np.reshape(next_state, [1, feature_length * env.observation_space.shape[0]])[0]
-				print("Next State: {0}".format(next_state), file=open(STDOUT_LOG, 'a'))
+
 				# Memorization
 				rtm_agent.memorize(state, action, reward, next_state, done)
 
@@ -335,24 +328,14 @@ def main():
 						win_ctr += 1
 
 					print("Episode: {0}\nEpsilon: {1}\tScore: {2}".format(curr_ep, rtm_agent.epsilon, step), file=open(STDOUT_LOG, 'a'))
-					score_log.add_score(step,
-					curr_ep,
-					gamma,
-					epsilon_decay_function,
-					consecutive_runs=episodes,
-					sedf_alpha=config['learning_params']['SEDF']['tail'],
-					sedf_beta=config['learning_params']['SEDF']['slope'],
-					sedf_delta=config['learning_params']['SEDF']['tail_gradient'],
-					edf_epsilon_decay=config['learning_params']['EDF']['epsilon_decay'])
+
 					neptune.log_metric('score', step)
 					scores.append(step)
 					break
-			# if step < 195:	
+
 			# 	# Store TD error from experience replay
 			rms_td_err_ep = rtm_agent.experience_replay(curr_ep, logger=STDOUT_LOG)
-			# else:
-			# 	rms_td_err_ep = 0
-			print("episode td err RMS: {}".format(rms_td_err_ep), file=open(STDOUT_LOG, 'a'))
+
 			# Append average TD error per episode to list
 			td_error.append(rms_td_err_ep)
 			
@@ -364,22 +347,16 @@ def main():
 		expt_data.loc[:, 'score_'+str(seed_value)] = scores
 		expt_data.loc[:, 'td_err_'+str(seed_value)] = td_error
 
-		# Plot average TD error over episode
-		debug_log.add_watcher(td_error,
-							n_clauses=config["qrtm_params"]["number_of_clauses"],
-							T=config["qrtm_params"]["T"],
-							feature_length=feature_length)
-		
-		
+
 		# Print win counter
 		print("win_ctr: {}".format(win_ctr), file=open(STDOUT_LOG, 'a'))
 
 		# Store configuration tested, win count and timestamp of experiment
 		store_config_tested(config, win_ctr, run_dt)
 
-		# neptune.log_artifact(STDOUT_LOG)
+
 		neptune.log_artifact(CONFIG_PATH)
-		discretizer.plot_bin_dist(plot_file=BIN_DIST_FILE, binarizer=binarizer)
+
 	expt_data.to_csv(EXPT_DATA)
 		
 

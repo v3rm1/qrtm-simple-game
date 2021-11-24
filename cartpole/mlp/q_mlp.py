@@ -36,6 +36,8 @@ EPISODES = 300
 
 EXPT_DATA = os.path.join(os.path.dirname(os.path.realpath(__file__)), "expt_csv/expts_"+strftime("%Y%m%d_%H%M%S")+".csv")
 
+TF_LOG_DIR = os.path.join(os.path.dirname(os.path.realpath(__file__)), "logger/logs")
+
 class DQNAgent:
 
 	def __init__(self, environment):
@@ -52,11 +54,14 @@ class DQNAgent:
 
 		self.model = keras.Sequential()
 		self.model.add(
-			keras.layers.Dense(400,
+			keras.layers.Dense(20,
 							   input_shape=(self.obs_space, ),
 							   activation="relu"))
 		self.model.add(
-			keras.layers.Dense(300,
+		    keras.layers.Dense(15,
+							   activation="relu"))
+		self.model.add(
+			keras.layers.Dense(10,
 							   activation="relu"))
 		self.model.add(
 			keras.layers.Dense(self.action_space, activation="linear"))
@@ -79,7 +84,7 @@ class DQNAgent:
 		if len(self.memory) < BATCH_SIZE:
 			return
 		batch = random.sample(self.memory, BATCH_SIZE)
-		# batch = self.memory[-BATCH_SIZE:]
+		
 		for state, action, reward, next_state, done in batch:
 			q_update = reward
 
@@ -88,7 +93,7 @@ class DQNAgent:
 
 			q_values = self.q_net.predict(state)
 			q_values[0][action] += q_update
-			tensorboard_callback = tf.keras.callbacks.TensorBoard(log_dir="./logger/logs", histogram_freq=0, write_graph=True, write_images=True)
+			tensorboard_callback = tf.keras.callbacks.TensorBoard(log_dir=TF_LOG_DIR, histogram_freq=0, write_graph=True, write_images=True)
 			self.q_net.fit(state, q_values, verbose=0, callbacks=[tensorboard_callback])
 		self.epsilon = EPSILON_MAX * pow(EPSILON_DECAY, episode)
 		self.epsilon = max(EPSILON_MIN, self.epsilon)
@@ -106,9 +111,11 @@ def main():
 
 		env = gym.make("CartPole-v0")
 		score_log = ScoreLogger("CartPole-v0")
-		neptune.create_experiment(name="MLP", tags=["MLP", str(seed_value)])
+		neptune.create_experiment(name="MLP", tags=["MLP", "peregrine", str(seed_value)])
 
 		dqn_agent = DQNAgent(env)
+		ep_steps = []
+		ep_rew = []
 		for ep in range(EPISODES):
 			state = env.reset()
 			state = np.reshape(state, [1, env.observation_space.shape[0]])
@@ -138,9 +145,11 @@ def main():
 			
 			neptune.log_metric('steps', episode_len)
 			neptune.log_metric('accum_reward', accum_reward)
+			ep_steps.append(episode_len)
+			ep_rew.append(accum_reward)
 		# Add experiment columns to the dataframe
-		expt_data.loc[:, 'score_'+str(seed_value)] = episode_len
-		expt_data.loc[:, 'reward_'+str(seed_value)] = accum_reward
+		expt_data.loc[:, 'score_'+str(seed_value)] = ep_steps
+		expt_data.loc[:, 'reward_'+str(seed_value)] = ep_rew
 	expt_data.to_csv(EXPT_DATA)
 
 

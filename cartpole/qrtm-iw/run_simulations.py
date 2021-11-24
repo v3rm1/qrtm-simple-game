@@ -20,10 +20,10 @@ neptune.init(project_qualified_name='v3rm1/CP-QRTM')
 
 # NOTE: SETTING GLOBAL SEED VALUES FOR CONSISTENT RESULTS IN EXPERIMENTAL SESSIONS
 # Set a seed value
-seed_values = [2, 131, 1729, 4027, 10069]
+seed_values = [2, 131, 1729]#, 4027, 10069]
 
 # A variable for attaching test tag to the experiment
-TEST_VAR = True
+TEST_VAR = False
 
 # Path to file containing all configurations for the variables used by the q-rtm system
 CONFIG_PATH = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'config.yaml')
@@ -325,15 +325,6 @@ def main():
 						win_ctr += 1
 
 					print("Episode: {0}\nEpsilon: {1}\tScore: {2}".format(curr_ep, rtm_agent.epsilon, step), file=open(STDOUT_LOG, 'a'))
-					score_log.add_score(step,
-					curr_ep,
-					gamma,
-					epsilon_decay_function,
-					consecutive_runs=episodes,
-					sedf_alpha=config['learning_params']['SEDF']['tail'],
-					sedf_beta=config['learning_params']['SEDF']['slope'],
-					sedf_delta=config['learning_params']['SEDF']['tail_gradient'],
-					edf_epsilon_decay=config['learning_params']['EDF']['epsilon_decay'])
 					neptune.log_metric('score', step)
 					scores.append(step)
 					break
@@ -351,12 +342,6 @@ def main():
 		# Add experiment columns to the dataframe
 		expt_data.loc[:, 'score_'+str(seed_value)] = scores
 		expt_data.loc[:, 'td_err_'+str(seed_value)] = td_error
-
-		# Plot average TD error over episode
-		debug_log.add_watcher(td_error,
-							n_clauses=config["qrtm_params"]["number_of_clauses"],
-							T=config["qrtm_params"]["T"],
-							feature_length=feature_length)
 		
 
 		# Store configuration tested, win count and timestamp of experiment

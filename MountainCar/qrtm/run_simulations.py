@@ -7,9 +7,7 @@ from collections import deque
 from time import strftime
 import csv
 import gym
-from logger.score import ScoreLogger
 from discretizer import CustomDiscretizer
-from logger.debugger import DebugLogger
 from rtm import TsetlinMachine
 import pandas as pd
 
@@ -21,15 +19,16 @@ neptune.init(project_qualified_name='v3rm1/MC-QRTM')
 
 # NOTE: SETTING GLOBAL SEED VALUES FOR CONSISTENT RESULTS IN EXPERIMENTAL SESSIONS
 # Set a seed value
-seed_values = [2, 131, 1729, 4027, 10069]
+seed_values = [2, 131, 1729]#, 4027, 10069]
+
 
 # A variable for attaching test tag to the experiment
-TEST_VAR = True
+TEST_VAR = False
 
 # Path to file containing all configurations for the variables used by the q-rtm system
 CONFIG_PATH = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'config.yaml')
 #
-CONFIG_TEST_SAVE_PATH = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'tested_configs.csv')
+CONFIG_TEST_SAVE_PATH = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'tested_configs_new.csv')
 
 # NOTE: DEFINING A STDOUT LOGGER TO STORE ALL PRINT STATEMENTS FOR FUTURE USE
 STDOUT_LOG = os.path.join(os.path.dirname(os.path.realpath(__file__)), "logger/txt_logs/run_"+strftime("%Y%m%d_%H%M%S")+".txt")
@@ -56,7 +55,7 @@ class RTMQL:
 
 		self.gamma = config['learning_params']['gamma']
 		self.learning_rate = config['learning_params']['learning_rate']
-		self.lamda = config['learning_params']['lamda']
+		
 		
 		self.max_steps = config['game_params']['max_steps']
 		self.max_score = config['game_params']['max_score']
@@ -91,7 +90,7 @@ class RTMQL:
 
 		self.agent_1 = self.tm_model()
 		self.agent_2 = self.tm_model()
-		# self.agent_3 = self.tm_model()
+		
 
 	def exp_eps_decay(self, current_ep):
 		self.epsilon = self.epsilon_max * pow(self.epsilon_decay, current_ep)
@@ -101,8 +100,8 @@ class RTMQL:
 		self.epsilon = 1.1 - (1 / (np.cosh(math.exp(-(current_ep - self.sedf_alpha * self.episodes) / (self.sedf_beta * self.episodes)))) + (current_ep * self.sedf_delta / self.episodes))
 		return max(min(self.epsilon_max, self.epsilon), self.epsilon_min)
 
-	def memorize(self, state, action, reward, next_state, done, e_trace):
-		self.memory.append((state, action, reward, next_state, done, e_trace))
+	def memorize(self, state, action, reward, next_state, done):
+		self.memory.append((state, action, reward, next_state, done))
 	
 	def tm_model(self):
 		self.tm_agent = TsetlinMachine(
@@ -118,10 +117,10 @@ class RTMQL:
 
 	def act(self, state):
 		if np.random.rand() <= self.epsilon:
-			# print("RANDOM ACTION")
+			
 			a = random.choice(self.action_space)
 			return a
-		# print("LEARNER ACTION")
+		
 		q_values = [self.agent_1.predict(state), self.agent_2.predict(state)]
 		a = 0 if np.argmax(q_values)==0 else 2
 		return a
@@ -132,43 +131,34 @@ class RTMQL:
 			return 0
 		# Generate random batch from memory
 		batch = random.sample(self.memory, self.replay_batch)
-		# batch  = self.memory[-self.replay_batch:]
 
-		for state, action, reward, next_state, done, e_trace in batch:
+		for state, action, reward, next_state, done in batch:
 			act_idx = self.action_space.index(action)
-			# print("Action: {} IDX: {}".format(action, act_idx))
+			
 			q_update = 0
 			# Compute q-values for state
 			q_values = [self.agent_1.predict(state), self.agent_2.predict(state)]
 			# Compute extected q-values for next state
 			target_q = [self.agent_1.predict(next_state), self.agent_2.predict(next_state)]
 
-			# print("PRE FIT")
-			# print("State: {}".format(state))
-			# print("Q_Values - State: {}".format(q_values))
-			# print("Next State: {}".format(next_state))
-			# print("Expectation - Next State: {}".format(target_q))
-			# print("Q-vals: {}\nExpectation: {}".format(q_values, target_q))
-			# Compute temporal difference error
 			td_error = reward + self.gamma * np.amax(target_q) - q_values[act_idx]
 			
 			if done:
 				# If game is done, the update equals reward
-				q_update = reward
+				q_update = 100
 			else:
 				# If game is not done, compute update using temporal difference error
-				# q_update += self.learning_rate * td_error
-				q_update += self.learning_rate * td_error * e_trace
-				e_trace = self.gamma * self.lamda * e_trace
+				q_update += self.learning_rate * td_error
+				
 			
 			# Add update to q_value of action taken for state
 			q_values[act_idx] += q_update
 
 			# Update agents on new q-values for the state
-			# print("AGENT 1")
+			
 
 			self.agent_1.update(state, q_values[0])
-			# print("AGENT 2")
+			
 
 			self.agent_2.update(state, q_values[1])
 
@@ -255,7 +245,7 @@ def main():
 		# 3. Set `numpy` pseudo-random generator at a fixed value
 		np.random.seed(seed_value)
 
-		neptune.create_experiment(name="RTM", tags=["lwp", seed_value])
+		neptune.create_experiment(name="RTM", tags=["peregrine", seed_value])
 
 		if TEST_VAR:
 			neptune.append_tag("test")
@@ -282,10 +272,7 @@ def main():
 		neptune.log_text('Exp Replay Batch', str(config['memory_params']['batch_size']))
 		neptune.log_text('Epsilon Decay Function', str(config['learning_params']['epsilon_decay_function']))
 		neptune.log_text('Gamma', str(config['learning_params']['gamma']))
-		
-		# Initializing loggers and watchers
-		debug_log = DebugLogger("MountainCar-v0")
-		score_log = ScoreLogger("MountainCar-v0", episodes)
+	
 
 		print("Initializing custom discretizer.")
 		discretizer = CustomDiscretizer()
@@ -327,7 +314,7 @@ def main():
 				next_state = np.reshape(next_state, [1, feature_length * env.observation_space.shape[0]])[0]
 				
 				# Memorization
-				rtm_agent.memorize(state, action, reward, next_state, done, 1)
+				rtm_agent.memorize(state, action, reward, next_state, done)
 
 				# Set state to next state
 				state = next_state
@@ -341,59 +328,23 @@ def main():
 					tot_reward = reward
 					print("Episode: {0}\nEpsilon: {1}\tScore: {2}".format(curr_ep, rtm_agent.epsilon, step))				
 
-					score_log.add_score(step,
-						curr_ep,
-						gamma,
-						epsilon_decay_function,
-						consecutive_runs=episodes,
-						sedf_alpha=config['learning_params']['SEDF']['tail'],
-						sedf_beta=config['learning_params']['SEDF']['slope'],
-						sedf_delta=config['learning_params']['SEDF']['tail_gradient'],
-						edf_epsilon_decay=config['learning_params']['EDF']['epsilon_decay'])
-					steps.append(step)
-					score.append(tot_reward)
-
-					break
-				elif done:
-					score_log.add_score(step,
-						curr_ep,
-						gamma,
-						epsilon_decay_function,
-						consecutive_runs=episodes,
-						sedf_alpha=config['learning_params']['SEDF']['tail'],
-						sedf_beta=config['learning_params']['SEDF']['slope'],
-						sedf_delta=config['learning_params']['SEDF']['tail_gradient'],
-						edf_epsilon_decay=config['learning_params']['EDF']['epsilon_decay'])
-					steps.append(step)
-					score.append(tot_reward)
-
+			steps.append(step)
+			score.append(tot_reward)
 			neptune.log_metric('steps', step)
 
 			# 	# Store TD error from experience replay
 			rms_td_err_ep = rtm_agent.experience_replay(curr_ep)
-
-
-			print("episode td err RMS: {}".format(rms_td_err_ep))
 			# Append average TD error per episode to list
 			td_error.append(rms_td_err_ep)
 			neptune.log_metric('TD_ERR (RMS)', rms_td_err_ep)
 			neptune.log_metric('reward', tot_reward)
 				
-		print("Len of TDERR array: {}".format(len(td_error)))
 
 		# Add experiment columns to the dataframe
 		expt_data.loc[:, 'score_'+str(seed_value)] = steps
 		expt_data.loc[:, 'reward_'+str(seed_value)] = score
 		expt_data.loc[:, 'td_err_'+str(seed_value)] = td_error
 
-		# Plot average TD error over episode
-		debug_log.add_watcher(td_error,
-							n_clauses=config["qrtm_params"]["number_of_clauses"],
-							T=config["qrtm_params"]["T"],
-							feature_length=feature_length)
-		
-		# Print win counter
-		print("win_ctr: {}".format(win_ctr))
 
 		# Store configuration tested, win count and timestamp of experiment
 		store_config_tested(config, win_ctr, run_dt)
