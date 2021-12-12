@@ -18,7 +18,7 @@ neptune.init(project_qualified_name='v3rm1/CP-QRTM')
 seed_values = [2, 131, 1729, 4027, 10069]
 
 # Reward decay
-GAMMA = 0.99
+GAMMA = 0.9
 # Learning Rate
 ALPHA = 0.01
 
@@ -54,15 +54,12 @@ class DQNAgent:
 
 		self.model = keras.Sequential()
 		self.model.add(
-			keras.layers.Dense(20,
+			keras.layers.Dense(100,
 							   input_shape=(self.obs_space, ),
-							   activation="relu"))
+							   activation="sigmoid"))
 		self.model.add(
-		    keras.layers.Dense(15,
-							   activation="relu"))
-		self.model.add(
-			keras.layers.Dense(10,
-							   activation="relu"))
+		    keras.layers.Dense(100,
+							   activation="sigmoid"))
 		self.model.add(
 			keras.layers.Dense(self.action_space, activation="linear"))
 		self.model.compile(
